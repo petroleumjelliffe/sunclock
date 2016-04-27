@@ -53,12 +53,12 @@ app.get('/sun', function(req, res) {
 });
 
 app.get('/weather', function(req, res) {
-  var key = '3d0b9a50d14c0adb1d55ae30ac4c12ce'
-  var lat = 40.6816778;
-  var lon = -73.9962808;
+  var key = req.query.forecast_key || process.env.FORECAST_API_KEY
+  var lat = req.query.lat || 40.6816778; //NYC
+  var lon = req.query.lon || -73.9962808; //NYC
 
   var options = {
-    APIKey: '3d0b9a50d14c0adb1d55ae30ac4c12ce'
+    APIKey: process.env.FORECAST_API_KEY
   }
   var forecast = new Forecast(options);
 
