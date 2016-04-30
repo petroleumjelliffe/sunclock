@@ -4,8 +4,39 @@ var Forecast = require('forecast.io');
 var Util = require('util');
 var app = express();
 
+//serve static files from /public
 app.use(express.static('public'));
 
+// respond with "hello world" when a GET request is made to the homepage
+app.get('/sunmoon', function(req, res) {
+  //console.log(req);
+
+  var lat = req.query.lat || 40.6816778; //NYC
+  var lon = req.query.lon || -73.9962808; //NYC
+
+  // get today's sunlight times for location
+  var times = sunCalc.getTimes(new Date(), lat, lon);
+
+  //calculate sun and oon positions between rise and set
+  var start = times.sunrise;
+  var arc=[];
+
+  //how many 15 minute intervals of daltight are there?
+  var daylightIntervals = (times.sunset.getTime() - times.sunrise.getTime()) / (15 * 60 * 1000);
+
+  for (var i=0; i < daylightIntervals; i++) {
+    var deltaT = i * 15*60*1000
+    var date = new Date(times.sunrise.getTime() + deltaT)
+    arc.push(sunCalc.getPosition(date, lat, lon));
+
+    console.log(date.getTime())
+    console.log(arc[i].azimuth*180/Math.PI);
+  }
+  //make sure to get sunset
+  arc.push(sunCalc.getPosition(times.sunset, lat, lon));
+
+  res.json(arc);
+});
 
 // respond with "hello world" when a GET request is made to the homepage
 app.get('/sun', function(req, res) {
@@ -15,8 +46,9 @@ app.get('/sun', function(req, res) {
     console.log(req.query);
   }
 
-  var lat = 40.6816778;
-  var lon = -73.9962808;
+  var lat = req.query.lat || 40.6816778; //NYC
+  var lon = req.query.lon || -73.9962808; //NYC
+
   // get today's sunlight times for London
   var times = sunCalc.getTimes(new Date(), lat, lon);
 
@@ -105,7 +137,7 @@ app.get('/weather', function(req, res) {
       var dy = (tempMax.temperatureMax - i) * scale;
       console.log('GPoint start'+i+' = GPoint(0, ' + dy + ');' );
       console.log('GPoint end'+i+' = GPoint(144, ' + dy + ');' );
-}
+    }
 
 
     console.log('GPoint startNow = GPoint(0, '+((tempMax.temperatureMax - data.currently.temperature)* scale)+');');
