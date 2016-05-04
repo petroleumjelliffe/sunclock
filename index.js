@@ -9,6 +9,20 @@ app.use(express.static('public'));
 
 // respond with "hello world" when a GET request is made to the homepage
 app.get('/sunmoon', function(req, res) {
+  var now = new Date()
+  var lat = req.query.lat || 40.6816778; //NYC
+  var lon = req.query.lon || -73.9962808; //NYC
+
+  var nowPos = {}
+  nowPos.sun = sunCalc.getPosition(now, lat, lon);
+  nowPos.moon = sunCalc.getMoonPosition(now, lat, lon);
+  nowPos.moonPhase = sunCalc.getMoonIllumination(now);
+  
+  res.json(nowPos);
+})
+
+// respond with "hello world" when a GET request is made to the homepage
+app.get('/sunmoon', function(req, res) {
   //console.log(req);
 
   var lat = req.query.lat || 40.6816778; //NYC
@@ -34,6 +48,15 @@ app.get('/sunmoon', function(req, res) {
   }
   //make sure to get sunset
   arc.push(sunCalc.getPosition(times.sunset, lat, lon));
+
+  var moonTimes = sunCalc.getMoonTimes(new Date(), lat, lon);
+
+  //if moon is up
+  if (!moonTimes.alwaysDown) {
+    //and isn't always up
+    if
+  }
+
 
   res.json(arc);
 });

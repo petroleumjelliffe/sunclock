@@ -1,0 +1,87 @@
+<html>
+<head>
+
+
+<script   src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <canvas id="myCanvas" width="360" height="360" style="border:1px solid #d3d3d3;"></canvas>
+  <p style="background:#f00;"><img src="img/072075348d410a448a70855677fedfa1.jpg" height="800" width="400"/></p>
+
+  <script>
+    $.getJSON("//localhost:4999/now", function(data) {
+      console.log(data);
+
+
+
+    });
+
+    $.getJSON("//localhost:4999/sunmoon", function(arcPoints) {
+      console.log(arcPoints);
+      var c = document.getElementById("myCanvas");
+      var ctx = c.getContext("2d");
+
+      $.getJSON("//localhost:4999/now", function(data) {
+        console.log(data);
+
+        function drawDisc(pos, ctx) {
+          ctx.beginPath();
+          ctx.arc((pos.azimuth * 180 / Math.PI) + 180,
+            180- (pos.altitude * 180 / Math.PI),
+            10, 0, 2 * Math.PI);
+          ctx.stroke();
+        }
+
+        drawDisc(data.sun, ctx);
+        drawDisc(data.moon, ctx);
+      });
+
+
+
+
+
+
+      //draw horizon line
+      ctx.fillStyle = "#7ec0ee";
+      ctx.fillRect(0,0,360,180);
+
+      var i;
+      for(i=0; i<360; i+= 20){
+       ctx.moveTo(i+5,180);
+          ctx.lineTo(i,180);
+
+      }
+      ctx.stroke();
+
+      var x=0,y=180;
+
+      function drawArc(points, ctx) {
+        for(i=0; i<points.length-1; i++){
+          p1 = points[i];
+          p2 = points[i+1];
+
+          x1 = (p1.azimuth * 180 / Math.PI) + 180
+          y1 = 180 - (p1.altitude * 180 / Math.PI)
+          ctx.moveTo(x1,y1);
+
+          x2 = (p2.azimuth * 180 / Math.PI) + 180
+          y2 = 180 - (p2.altitude * 180 / Math.PI)
+
+          ctx.lineTo(x2,y2);
+          ctx.stroke();
+
+        }
+      }
+
+    drawArc(arcPoints.sunArc, ctx);
+    drawArc(arcPoints.moonArc, ctx);
+    })
+  </script>
+
+</body>
+
+
+
+
+</html>
