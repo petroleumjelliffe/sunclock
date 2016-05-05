@@ -8,7 +8,7 @@ var app = express();
 app.use(express.static('public'));
 
 // respond with "hello world" when a GET request is made to the homepage
-app.get('/sunmoon', function(req, res) {
+app.get('/now', function(req, res) {
   var now = new Date()
   var lat = req.query.lat || 40.6816778; //NYC
   var lon = req.query.lon || -73.9962808; //NYC
@@ -17,7 +17,7 @@ app.get('/sunmoon', function(req, res) {
   nowPos.sun = sunCalc.getPosition(now, lat, lon);
   nowPos.moon = sunCalc.getMoonPosition(now, lat, lon);
   nowPos.moonPhase = sunCalc.getMoonIllumination(now);
-  
+
   res.json(nowPos);
 })
 
@@ -25,40 +25,59 @@ app.get('/sunmoon', function(req, res) {
 app.get('/sunmoon', function(req, res) {
   //console.log(req);
 
+  function listTimes(interval, rise, set) {
+    var deltaT = interval * 60 * 1000;
+
+    //how many n minute intervals of light are there?
+    var lightIntervals = (set.getTime() - rise.getTime()) / (deltaT);
+
+    var times=[];
+
+    for (var i=0; i < lightIntervals; i++) {
+      var dateTime = new Date(rise.getTime() + (i * deltaT))
+      times.push(dateTime)
+    }
+
+    return times;
+  }
+
+  function plotArc(fnPos, dateArray) {
+    console.log(dateArray)
+
+    return dateArray.map(function(date, index, array) {
+      console.log(date)
+      return fnPos(date, lat, lon)
+    })
+
+  }
+
   var lat = req.query.lat || 40.6816778; //NYC
   var lon = req.query.lon || -73.9962808; //NYC
+  var now = new Date()
 
-  // get today's sunlight times for location
-  var times = sunCalc.getTimes(new Date(), lat, lon);
+  var sunTimes = sunCalc.getTimes(now, lat, lon);
+  var moonTimes = sunCalc.getMoonTimes(now, lat, lon);
 
-  //calculate sun and oon positions between rise and set
-  var start = times.sunrise;
-  var arc=[];
 
-  //how many 15 minute intervals of daltight are there?
-  var daylightIntervals = (times.sunset.getTime() - times.sunrise.getTime()) / (15 * 60 * 1000);
+  var daylightTimes = listTimes(15, sunTimes.sunrise, sunTimes.sunset) //array of times to get positions for
 
-  for (var i=0; i < daylightIntervals; i++) {
-    var deltaT = i * 15*60*1000
-    var date = new Date(times.sunrise.getTime() + deltaT)
-    arc.push(sunCalc.getPosition(date, lat, lon));
+  var moonlightTimes = []; //empty array of moon points
 
-    console.log(date.getTime())
-    console.log(arc[i].azimuth*180/Math.PI);
-  }
-  //make sure to get sunset
-  arc.push(sunCalc.getPosition(times.sunset, lat, lon));
-
-  var moonTimes = sunCalc.getMoonTimes(new Date(), lat, lon);
-
-  //if moon is up
   if (!moonTimes.alwaysDown) {
-    //and isn't always up
-    if
+    if(!moonTimes.alwaysUp) {
+      moonlightTimes = listTimes(15, moonTimes.rise, moonTimes.set);
+    } else {
+      //if moon doesn't set get all 24 hours worth
+      moonlightTimes = listTimes(15, now, new Date(now.getTime() + (24 * 60 * 60 * 1000)));
+    }
   }
 
 
-  res.json(arc);
+  var arcs = {}
+  arcs.sun = plotArc(sunCalc.getPosition, daylightTimes)
+  arcs.moon = plotArc(sunCalc.getMoonPosition, moonlightTimes)
+
+  res.json(arcs);
 });
 
 // respond with "hello world" when a GET request is made to the homepage

@@ -10,13 +10,6 @@
   <p style="background:#f00;"><img src="img/072075348d410a448a70855677fedfa1.jpg" height="800" width="400"/></p>
 
   <script>
-    $.getJSON("//localhost:4999/now", function(data) {
-      console.log(data);
-
-
-
-    });
-
     $.getJSON("//localhost:4999/sunmoon", function(arcPoints) {
       console.log(arcPoints);
       var c = document.getElementById("myCanvas");
@@ -36,11 +29,6 @@
         drawDisc(data.sun, ctx);
         drawDisc(data.moon, ctx);
       });
-
-
-
-
-
 
       //draw horizon line
       ctx.fillStyle = "#7ec0ee";
@@ -74,8 +62,8 @@
         }
       }
 
-    drawArc(arcPoints.sunArc, ctx);
-    drawArc(arcPoints.moonArc, ctx);
+    drawArc(arcPoints.sun, ctx);
+    drawArc(arcPoints.moon, ctx);
     })
   </script>
 
