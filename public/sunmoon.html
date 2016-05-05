@@ -18,7 +18,9 @@
       $.getJSON("//localhost:4999/now", function(data) {
         console.log(data);
 
-        function drawDisc(pos, ctx) {
+        function drawDisc(pos, color, ctx) {
+          ctx.fillStyle = color;
+
           ctx.beginPath();
           ctx.arc((pos.azimuth * 180 / Math.PI) + 180,
             180- (pos.altitude * 180 / Math.PI),
@@ -26,8 +28,8 @@
           ctx.stroke();
         }
 
-        drawDisc(data.sun, ctx);
-        drawDisc(data.moon, ctx);
+        drawDisc(data.sun, "#fdb813", ctx);
+        drawDisc(data.moon, "#fdfdf8", ctx);
       });
 
       //draw horizon line
