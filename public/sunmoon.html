@@ -6,8 +6,8 @@
 </head>
 
 <body>
-  <canvas id="myCanvas" width="360" height="360" style="border:1px solid #d3d3d3;"></canvas>
-  <p style="background:#f00;"><img src="img/072075348d410a448a70855677fedfa1.jpg" height="800" width="400"/></p>
+  <canvas id="myCanvas" width="360" height="180" style="border:1px solid #d3d3d3;"></canvas>
+  <!-- <p style="background:#f00;"><img src="img/072075348d410a448a70855677fedfa1.jpg" height="800" width="400"/></p> -->
 
   <script>
     $.getJSON("//localhost:4999/sunmoon", function(arcPoints) {
@@ -25,6 +25,9 @@
           ctx.arc((pos.azimuth * 180 / Math.PI) + 180,
             180- (pos.altitude * 180 / Math.PI),
             10, 0, 2 * Math.PI);
+
+          ctx.closePath();
+          ctx.fill();
           ctx.stroke();
         }
 
@@ -32,17 +35,17 @@
         drawDisc(data.moon, "#fdfdf8", ctx);
       });
 
-      //draw horizon line
+      //draw sky
       ctx.fillStyle = "#7ec0ee";
       ctx.fillRect(0,0,360,180);
 
-      var i;
-      for(i=0; i<360; i+= 20){
-       ctx.moveTo(i+5,180);
-          ctx.lineTo(i,180);
-
-      }
-      ctx.stroke();
+      // var i;
+      // for(i=0; i<360; i+= 20){
+      //  ctx.moveTo(i+5,180);
+      //     ctx.lineTo(i,180);
+      //
+      // }
+      // ctx.stroke();
 
       var x=0,y=180;
 
