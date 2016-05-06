@@ -6,14 +6,31 @@
 </head>
 
 <body>
-  <canvas id="myCanvas" width="360" height="180" style="border:1px solid #d3d3d3;"></canvas>
+  <canvas id="myCanvas" width="1000" height="400" style="border:1px solid #d3d3d3;"></canvas>
   <!-- <p style="background:#f00;"><img src="img/072075348d410a448a70855677fedfa1.jpg" height="800" width="400"/></p> -->
 
   <script>
+    // var colors = {
+    //   sunrise	:
+    //   sunrise
+    //   goldenHourEnd
+    //   solarNoon
+    //   goldenHour
+    //   sunsetStart
+    //   sunset
+    //   dusk
+    //   nauticalDusk
+    //   night
+    //   nadir
+    //   nightEnd
+    //   nauticalDawn
+    //   dawn
+    // }
     $.getJSON("//localhost:4999/sunmoon", function(arcPoints) {
       console.log(arcPoints);
       var c = document.getElementById("myCanvas");
       var ctx = c.getContext("2d");
+      ctx.lineWidth = 0.5;
 
       $.getJSON("//localhost:4999/now", function(data) {
         console.log(data);
@@ -22,13 +39,16 @@
           ctx.fillStyle = color;
 
           ctx.beginPath();
-          ctx.arc((pos.azimuth * 180 / Math.PI) + 180,
-            180- (pos.altitude * 180 / Math.PI),
-            10, 0, 2 * Math.PI);
+
+          var x1 = (pos.azimuth / 2 / Math.PI * c.width) + c.width/2;
+          var y1 = c.height - ((pos.altitude * 2 / Math.PI) * c.height);
+          var r = c.height/20
+          ctx.arc(x1, y1, r, 0, 2 * Math.PI);
 
           ctx.closePath();
           ctx.fill();
-          ctx.stroke();
+
+          //ctx.stroke();
         }
 
         drawDisc(data.sun, "#fdb813", ctx);
@@ -37,34 +57,37 @@
 
       //draw sky
       ctx.fillStyle = "#7ec0ee";
-      ctx.fillRect(0,0,360,180);
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.lineWidth = 0.25;
 
-      // var i;
-      // for(i=0; i<360; i+= 20){
-      //  ctx.moveTo(i+5,180);
-      //     ctx.lineTo(i,180);
-      //
-      // }
-      // ctx.stroke();
+//draw altitude lines
+      for(var i=0; i<6; i++) {
+        var y = Math.ceil(c.height* (1 - Math.sin(Math.PI* i /12))) +0.5;
+        ctx.moveTo(0, y);
+        ctx.lineTo(c.width, y);
 
-      var x=0,y=180;
+        ctx.stroke();
 
+      }
+
+      //draw paths of sun and moon
       function drawArc(points, ctx) {
-        for(i=0; i<points.length-1; i++){
-          p1 = points[i];
-          p2 = points[i+1];
+        ctx.beginPath();
+        points.reduce(function(p1, p2, i, array) {
+          if (i>0) {
+            x1 = (p1.azimuth / 2 / Math.PI * c.width) + c.width/2;
+            y1 = c.height - ((p1.altitude * 2 / Math.PI) * c.height);
+            ctx.moveTo(x1,y1);
 
-          x1 = (p1.azimuth * 180 / Math.PI) + 180
-          y1 = 180 - (p1.altitude * 180 / Math.PI)
-          ctx.moveTo(x1,y1);
+            x2 = (p2.azimuth / 2 / Math.PI * c.width) + c.width/2;
+            y2 = c.height - ((p2.altitude * 2 / Math.PI) * c.height);
 
-          x2 = (p2.azimuth * 180 / Math.PI) + 180
-          y2 = 180 - (p2.altitude * 180 / Math.PI)
+            ctx.lineTo(x2,y2);
+            ctx.stroke();
+          }
 
-          ctx.lineTo(x2,y2);
-          ctx.stroke();
-
-        }
+          return p2;
+        })
       }
 
     drawArc(arcPoints.sun, ctx);
