@@ -58,15 +58,16 @@
           var apparentAngle  = data.moonPhase.angle - pos.parallacticAngle;
 
           var img = document.createElement('IMG');
+          var spriteOffset = Math.ceil(data.moonPhase.phase*8)%8
           //draw image after loading
           img.onload = function () {
-            console.log(pos)
+            console.log(spriteOffset)
             ctx.save()
             ctx.translate(x1, y1)
             ctx.rotate(apparentAngle);
           	ctx.translate(-x1, -y1);
-            ctx.drawImage(this, 0 , 0, img.naturalWidth, img.naturalHeight, x1-r,y1-r, 2*r, 2*r);
-           ctx.restore();
+            ctx.drawImage(this, spriteOffset * 316 , 0, img.naturalHeight, img.naturalHeight, x1-r,y1-r, 2*r, 2*r);
+            ctx.restore();
 
           }
 
@@ -77,7 +78,7 @@
         }
         drawDisc(data.sun, "#fdb813", ctx);
 
-        drawImageDisc(data.moon, "img/moon_phases4.png", ctx)
+        drawImageDisc(data.moon, "img/moon_phases-sheet.png", ctx)
         //drawDisc(data.moon, "#fdfdf8", ctx);
       });
 
