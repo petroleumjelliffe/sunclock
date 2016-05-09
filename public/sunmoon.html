@@ -10,22 +10,21 @@
   <!-- <p style="background:#f00;"><img src="img/072075348d410a448a70855677fedfa1.jpg" height="800" width="400"/></p> -->
 
   <script>
-    // var colors = {
+    var colors = {
     //   sunrise	:
-    //   sunrise
-    //   goldenHourEnd
-    //   solarNoon
+      "goldenHourEnd" : "#7ec0ee",
     //   goldenHour
     //   sunsetStart
     //   sunset
     //   dusk
-    //   nauticalDusk
-    //   night
+       "nauticalDusk" : "#f00",
+      "night" : "#280137"
     //   nadir
     //   nightEnd
     //   nauticalDawn
     //   dawn
-    // }
+    }
+
     $.getJSON("//localhost:4999/sunmoon", function(arcPoints) {
       console.log(arcPoints);
       var c = document.getElementById("myCanvas");
@@ -68,23 +67,23 @@
           	ctx.translate(-x1, -y1);
             ctx.drawImage(this, spriteOffset * 316 , 0, img.naturalHeight, img.naturalHeight, x1-r,y1-r, 2*r, 2*r);
             ctx.restore();
-
           }
 
           // Specify the src to load the image
           img.src = src; //triggers onLoad()
-
-
         }
-        drawDisc(data.sun, "#fdb813", ctx);
 
+        //draw sun and moon
+        drawDisc(data.sun, "#fdb813", ctx);
         drawImageDisc(data.moon, "img/moon_phases-sheet.png", ctx)
-        //drawDisc(data.moon, "#fdfdf8", ctx);
+
+        //draw sky
+        ctx.fillStyle = colors[data.partOfDay];
+
+        // ctx.fillStyle = "#7ec0ee";
+        ctx.fillRect(0, 0, c.width, c.height);
       });
 
-      //draw sky
-      ctx.fillStyle = "#7ec0ee";
-      ctx.fillRect(0, 0, c.width, c.height);
       ctx.lineWidth = 0.25;
 
 //draw altitude lines

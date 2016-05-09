@@ -18,6 +18,19 @@ app.get('/now', function(req, res) {
   nowPos.moon = sunCalc.getMoonPosition(now, lat, lon);
   nowPos.moonPhase = sunCalc.getMoonIllumination(now);
 
+  //get current part of the day (sunrise, sunset, night, etc.)
+  var timeOfDay = sunCalc.times.sort(function(a,b) { return (a[0]>b[0])} )
+  console.log(sunCalc.times)
+  console.log(nowPos.sun.altitude*180/Math.PI);
+  // var x = timeOfDay.reduce(function(prev, cur, i, array) {
+  //   var ascending = (sunCalc.getTimes(now, lat, lon).solarNoon.getTime() > now.getTime()) ? 1 : 2
+  //   return ( nowPos.sun.altitude > (cur[0]*Math.PI/180) ? cur[ascending] : prev)
+  // }, "night")
+  // console.log(x);
+  nowPos.partOfDay = timeOfDay.reduce(function(prev, cur, i, array) {
+    var ascending = (sunCalc.getTimes(now, lat, lon).solarNoon.getTime() > now.getTime()) ? 1 : 2
+    return ( nowPos.sun.altitude > (cur[0]*Math.PI/180) ? cur[ascending] : prev)
+  }, "night")
   res.json(nowPos);
 })
 
