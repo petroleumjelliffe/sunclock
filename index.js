@@ -226,7 +226,7 @@ app.get('/weather', function(req, res) {
 
     //get max and min of temps for the week
     var tempMax = data.daily.data.reduce(function(prev, cur){
-      console.log(cur.temperatureMax);
+      console.log("max temp" +cur.temperatureMax);
 
       if (prev.temperatureMax < cur.temperatureMax) {
         return cur
@@ -240,7 +240,15 @@ app.get('/weather', function(req, res) {
       }
       return prev
     });
-    that.json(data);
+
+    var temperatureArray = [tempMax.temperatureMax, tempMin.temperatureMin];
+    for (var i=0; i< data.daily.data.length; i++) {
+
+      temperatureArray.push(data.daily.data[i].temperatureMax)
+      temperatureArray.push(data.daily.data[i].temperatureMin)
+    }
+
+    that.json(temperatureArray);
 
     var scale = (168.0 / 3.0) / (tempMax.temperatureMax - tempMin.temperatureMin); //pebble height top third
 
