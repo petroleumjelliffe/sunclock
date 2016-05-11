@@ -25,7 +25,7 @@
     //   dawn
     }
 
-    $.getJSON("//localhost:4999/sunmoon", function(arcPoints) {
+    $.getJSON("//localhost:4999/weekly", function(arcPoints) {
       console.log(arcPoints);
       var c = document.getElementById("myCanvas");
       var ctx = c.getContext("2d");
@@ -96,7 +96,8 @@
       }
 
       //draw paths of sun and moon
-      function drawArc(points, ctx) {
+      function drawArc(points, ctx, color) {
+        ctx.strokeStyle = color
         ctx.beginPath();
         points.reduce(function(p1, p2, i, array) {
           if (i>0) {
@@ -115,8 +116,8 @@
         })
       }
 
-    drawArc(arcPoints.sun, ctx);
-    drawArc(arcPoints.moon, ctx);
+    drawArc(arcPoints.sun, ctx, "#FFFFFF");
+    drawArc(arcPoints.moon, ctx, "#FF0000");
     })
 
   });
