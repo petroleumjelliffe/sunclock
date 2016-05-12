@@ -25,13 +25,13 @@
     //   dawn
     }
 
-    $.getJSON("//localhost:4999/sunmoon", function(arcPoints) {
+    $.getJSON("/sunmoon", function(arcPoints) {
       console.log(arcPoints);
       var c = document.getElementById("myCanvas");
       var ctx = c.getContext("2d");
       ctx.lineWidth = 0.5;
 
-      $.getJSON("//localhost:4999/now", function(data) {
+      $.getJSON("/now", function(data) {
         console.log(data);
 
         function drawDisc(pos, color, ctx) {
