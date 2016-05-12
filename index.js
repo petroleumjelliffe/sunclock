@@ -224,6 +224,8 @@ app.get('/weather', function(req, res) {
     var offset = data.offset * 60 * 60; //seconds
     var today = new Date((data.daily.data[1].time ) * 1000);
 
+    var tempNow = data.currently.temperature;
+    console.log(data.currently.temperature);
     //get max and min of temps for the week
     var tempMax = data.daily.data.reduce(function(prev, cur){
       console.log("max temp" +cur.temperatureMax);
@@ -241,7 +243,7 @@ app.get('/weather', function(req, res) {
       return prev
     });
 
-    var temperatureArray = [tempMax.temperatureMax, tempMin.temperatureMin];
+    var temperatureArray = [tempNow, tempMax.temperatureMax, tempMin.temperatureMin];
     for (var i=0; i< data.daily.data.length; i++) {
 
       temperatureArray.push(data.daily.data[i].temperatureMax)
