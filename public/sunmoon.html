@@ -6,54 +6,67 @@
 </head>
 
 <body>
-  <canvas id="myCanvas" width="1000" height="400" style="border:1px solid #d3d3d3;"></canvas>
+  <canvas id="myCanvas" width="800" height="300" style="border:1px solid #d3d3d3;"></canvas>
+  <!-- <canvas id="myCanvas" width="144" height="56" style="border:1px solid #d3d3d3;"></canvas> -->
+
   <!-- <p style="background:#f00;"><img src="img/072075348d410a448a70855677fedfa1.jpg" height="800" width="400"/></p> -->
 
   <script>
-    var colors = {
-    //   sunrise	:
-      "goldenHourEnd" : "#7ec0ee",
-    //   goldenHour
-    //   sunsetStart
-    //   sunset
-    //   dusk
-       "nauticalDusk" : "#f00",
-      "night" : "#280137"
-    //   nadir
-    //   nightEnd
-    //   nauticalDawn
-    //   dawn
+    var getColors = function(ctx, w, h) {
+      var colors = {
+      //   sunrise	:
+        "goldenHourEnd" : "#7ec0ee",
+      //   goldenHour
+        "sunsetStart" : "#F60",
+      //   sunset
+      //   dusk
+         "nauticalDusk" : "#f00",
+        "night" : "#280137"
+      //   nadir
+      //   nightEnd
+      //   nauticalDawn
+      //   dawn
+      }
+
+
+      var my_gradient=ctx.createLinearGradient(0,0,0,h);
+      my_gradient.addColorStop(0.95,"blue");
+      my_gradient.addColorStop(1.0,"#FFA500");
+      colors.dusk = my_gradient;
+
+
+      return colors;
     }
+
 
     $.getJSON("/sunmoon", function(arcPoints) {
       console.log(arcPoints);
       var c = document.getElementById("myCanvas");
       var ctx = c.getContext("2d");
-      ctx.lineWidth = 0.5;
+
+      var colors = getColors(ctx, c.width, c.height);
 
       $.getJSON("/now", function(data) {
         console.log(data);
 
         function drawDisc(pos, color, ctx) {
-          ctx.fillStyle = color;
-
-          ctx.beginPath();
-
           var x1 = (pos.azimuth / 2 / Math.PI * c.width) + c.width/2;
           var y1 = c.height - ((pos.altitude * 2 / Math.PI) * c.height);
-          var r = c.height/20
-          ctx.arc(x1, y1, r, 0, 2 * Math.PI);
+          var r = c.height/10
 
+          ctx.save();
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(x1, y1, r, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
-
-          //ctx.stroke();
+          ctx.restore();
         }
 
         function drawImageDisc(pos, src, ctx) {
           var x1 = (pos.azimuth / 2 / Math.PI * c.width) + c.width/2;
           var y1 = c.height - ((pos.altitude * 2 / Math.PI) * c.height);
-          var r = c.height/30
+          var r = c.height/10
           var apparentAngle  = data.moonPhase.angle - pos.parallacticAngle;
 
           var img = document.createElement('IMG');
@@ -73,53 +86,70 @@
           img.src = src; //triggers onLoad()
         }
 
-        //draw sun and moon
-        drawDisc(data.sun, "#fdb813", ctx);
-        drawImageDisc(data.moon, "img/moon_phases-sheet.png", ctx)
 
         //draw sky
         ctx.fillStyle = colors[data.partOfDay];
+        console.log(data.partOfDay);
 
         // ctx.fillStyle = "#7ec0ee";
         ctx.fillRect(0, 0, c.width, c.height);
 
-      ctx.lineWidth = 0.25;
+        ctx.lineWidth = 0.25;
+        ctx.strokeStyle = "#ffffff";
 
-//draw altitude lines
-      for(var i=0; i<6; i++) {
-        var y = Math.ceil(c.height* (1 - Math.sin(Math.PI* i /12))) +0.5;
-        ctx.moveTo(0, y);
-        ctx.lineTo(c.width, y);
 
-        ctx.stroke();
 
-      }
+        //draw altitude lines
+        for(var i=0; i<6; i++) {
+          var y = Math.ceil(c.height* (1 - Math.sin(Math.PI* i /12))) +0.5;
+          ctx.moveTo(0, y);
+          ctx.lineTo(c.width, y);
 
-      //draw paths of sun and moon
-      function drawArc(points, ctx) {
-        ctx.beginPath();
-        points.reduce(function(p1, p2, i, array) {
-          if (i>0) {
-            x1 = (p1.azimuth / 2 / Math.PI * c.width) + c.width/2;
-            y1 = c.height - ((p1.altitude * 2 / Math.PI) * c.height);
-            ctx.moveTo(x1,y1);
+          ctx.stroke();
 
-            x2 = (p2.azimuth / 2 / Math.PI * c.width) + c.width/2;
-            y2 = c.height - ((p2.altitude * 2 / Math.PI) * c.height);
+        }
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
 
-            ctx.lineTo(x2,y2);
-            ctx.stroke();
-          }
+        ctx.font = c.height/56*10+"px Arial";
+        ctx.fillText("E",c.width/4,c.height);
+        ctx.fillText("S",c.width/2,c.height);
+        ctx.fillText("W",c.width/4*3,c.height);
 
-          return p2;
-        })
-      }
 
-    drawArc(arcPoints.sun, ctx);
-    drawArc(arcPoints.moon, ctx);
-    })
+        //draw paths of sun and moon
+        function drawArc(points, ctx) {
+          console.log(arcPoints);
+          ctx.save();
+          ctx.beginPath();
+          points.reduce(function(p1, p2, i, array) {
+            if (i>0) {
+              x1 = (p1.azimuth / 2 / Math.PI * c.width) + c.width/2;
+              y1 = c.height - ((p1.altitude * 2 / Math.PI) * c.height);
+              ctx.moveTo(x1,y1);
 
-  });
+              x2 = (p2.azimuth / 2 / Math.PI * c.width) + c.width/2;
+              y2 = c.height - ((p2.altitude * 2 / Math.PI) * c.height);
+
+              ctx.lineTo(x2,y2);
+              ctx.stroke();
+            }
+
+            return p2;
+          }, {} );
+          ctx.restore();
+        }
+
+        // drawArc(arcPoints.sun, ctx);
+        // drawArc(arcPoints.moon, ctx);
+
+        //draw sun and moon
+        drawDisc(data.sun, "#fdb813", ctx);
+        drawImageDisc(data.moon, "img/moon_phases-sheet.png", ctx)
+
+      })
+
+    });
 
   </script>
 

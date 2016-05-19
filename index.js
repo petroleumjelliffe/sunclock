@@ -42,7 +42,7 @@ app.get('/sunmoon', function(req, res) {
     var deltaT = interval * 60 * 1000;
 
     //how many n minute intervals of light are there?
-    var lightIntervals = (set.getTime() - rise.getTime()) / (deltaT);
+    var lightIntervals = Math.abs((set.getTime() - rise.getTime()) / (deltaT));
 
     var times=[];
 
@@ -78,11 +78,18 @@ app.get('/sunmoon', function(req, res) {
 
   if (!moonTimes.alwaysDown) {
     if(!moonTimes.alwaysUp) {
+      console.log("rise/set");
+      console.log(moonTimes);
       moonlightTimes = listTimes(15, moonTimes.rise, moonTimes.set);
+      console.log(moonlightTimes);
     } else {
+      console.log("always down");
+
       //if moon doesn't set get all 24 hours worth
       moonlightTimes = listTimes(15, now, new Date(now.getTime() + (24 * 60 * 60 * 1000)));
     }
+  } else {
+    console.log("always down");
   }
 
 
