@@ -6,6 +6,7 @@
 </head>
 
 <body>
+  <canvas id="topCanvas" width="400" height="400" style="border:1px solid #d3d3d3;"></canvas>
   <canvas id="myCanvas" width="800" height="300" style="border:1px solid #d3d3d3;"></canvas>
   <!-- <canvas id="myCanvas" width="144" height="56" style="border:1px solid #d3d3d3;"></canvas> -->
 
@@ -16,7 +17,7 @@
       var colors = {
       //   sunrise	:
         "goldenHourEnd" : "#7ec0ee",
-      //   goldenHour
+         "goldenHour" : "#7ec0ee",
         "sunsetStart" : "#F60",
       //   sunset
       //   dusk
@@ -28,12 +29,10 @@
       //   dawn
       }
 
-
       var my_gradient=ctx.createLinearGradient(0,0,0,h);
       my_gradient.addColorStop(0.95,"blue");
       my_gradient.addColorStop(1.0,"#FFA500");
       colors.dusk = my_gradient;
-
 
       return colors;
     }
@@ -44,28 +43,50 @@
       var c = document.getElementById("myCanvas");
       var ctx = c.getContext("2d");
 
+      var topCanvas = document.getElementById("topCanvas");
+      var topCtx = topCanvas.getContext("2d");
+
       var colors = getColors(ctx, c.width, c.height);
 
       $.getJSON("/now", function(data) {
         console.log(data);
+        //translate polar coords as seen from side
+        function xySide(azimuth, altitude, c) {
+          var obj ={}
+          obj.x = (azimuth / 2 / Math.PI * c.width) + c.width/2;
+          obj.y = c.height - ((altitude * 2 / Math.PI) * c.height);
 
-        function drawDisc(pos, color, ctx) {
-          var x1 = (pos.azimuth / 2 / Math.PI * c.width) + c.width/2;
-          var y1 = c.height - ((pos.altitude * 2 / Math.PI) * c.height);
+          return obj;
+        }
+        //draw polar coords as seen from above
+        function xyTop(azimuth, altitude, c) {
+          var obj ={}
+          var dAz =  -Math.PI/2;  //correct for diff in 0º between the canvas and compass
+
+          var r1 = Math.cos(altitude) * c.width/2
+          obj.x = r1 * Math.cos(azimuth+dAz) + c.width/2
+          obj.y = r1 * Math.sin(azimuth+dAz) + c.height/2
+
+          return obj;
+        }
+
+        function drawDisc(func, pos, color, ctx, c) {
+          var p = func(pos.azimuth, pos.altitude, c)
           var r = c.height/10
 
           ctx.save();
           ctx.fillStyle = color;
           ctx.beginPath();
-          ctx.arc(x1, y1, r, 0, 2 * Math.PI);
+          ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
           ctx.closePath();
           ctx.fill();
           ctx.restore();
         }
 
-        function drawImageDisc(pos, src, ctx) {
-          var x1 = (pos.azimuth / 2 / Math.PI * c.width) + c.width/2;
-          var y1 = c.height - ((pos.altitude * 2 / Math.PI) * c.height);
+        function drawImageDisc(func, pos, src, ctx) {
+          var p = func(pos.azimuth, pos.altitude, c)
+          // var x1 = (pos.azimuth / 2 / Math.PI * c.width) + c.width/2;
+          // var y1 = c.height - ((pos.altitude * 2 / Math.PI) * c.height);
           var r = c.height/10
           var apparentAngle  = data.moonPhase.angle - pos.parallacticAngle;
 
@@ -118,20 +139,26 @@
 
 
         //draw paths of sun and moon
-        function drawArc(points, ctx) {
+        function drawArc(func, points, ctx, c) {
           console.log(arcPoints);
           ctx.save();
           ctx.beginPath();
           points.reduce(function(p1, p2, i, array) {
             if (i>0) {
-              x1 = (p1.azimuth / 2 / Math.PI * c.width) + c.width/2;
-              y1 = c.height - ((p1.altitude * 2 / Math.PI) * c.height);
-              ctx.moveTo(x1,y1);
+              // x1 = (p1.azimuth / 2 / Math.PI * c.width) + c.width/2;
+              // y1 = c.height - ((p1.altitude * 2 / Math.PI) * c.height);
+              // ctx.moveTo(x1,y1);
+              //
+              // x2 = (p2.azimuth / 2 / Math.PI * c.width) + c.width/2;
+              // y2 = c.height - ((p2.altitude * 2 / Math.PI) * c.height);
+              //
+              // ctx.lineTo(x2,y2);
+              // ctx.stroke();
+              var xy1 = func(p1.azimuth, p1.altitude, c)
+              ctx.moveTo(xy1.x,xy1.y);
 
-              x2 = (p2.azimuth / 2 / Math.PI * c.width) + c.width/2;
-              y2 = c.height - ((p2.altitude * 2 / Math.PI) * c.height);
-
-              ctx.lineTo(x2,y2);
+              var xy2 = func(p2.azimuth, p2.altitude, c)
+              ctx.lineTo(xy2.x,xy2.y);
               ctx.stroke();
             }
 
@@ -139,13 +166,41 @@
           }, {} );
           ctx.restore();
         }
+        // function drawEllipse(points, ctx, c) {
+        //   ctx.save();
+        //   ctx.beginPath();
+        //   points.reduce(function(p1, p2, i, array) {
+        //     if (i>0) {
+        //       var xy1 = xyTop(p1.azimuth, p1.altitude, c)
+        //       ctx.moveTo(xy1.x,xy1.y);
+        //
+        //       var xy2 = xyTop(p2.azimuth, p2.altitude, c)
+        //       ctx.lineTo(xy2.x,xy2.y);
+        //       ctx.stroke();
+        //     }
+        //
+        //     return p2;
+        //   }, {} );
+        //   ctx.restore();
+        // }
 
-        drawArc(arcPoints.sun, ctx);
-        drawArc(arcPoints.moon, ctx);
+        drawArc(xySide, arcPoints.sun, ctx, c);
+        drawArc(xySide, arcPoints.moon, ctx, c);
 
         //draw sun and moon
-        drawDisc(data.sun, "#fdb813", ctx);
-        drawImageDisc(data.moon, "img/moon_phases-sheet.png", ctx)
+        drawDisc(xySide, data.sun, "#fdb813", ctx, c);
+        drawImageDisc(xySide, data.moon, "img/moon_phases-sheet.png", ctx)
+
+        topCtx.beginPath();
+        topCtx.arc(topCanvas.width/2,topCanvas.height/2,topCanvas.width/2,0,2*Math.PI);
+        topCtx.stroke();
+
+        drawArc(xyTop, arcPoints.sun, topCtx, topCanvas);
+        drawArc(xyTop, arcPoints.moon, topCtx, topCanvas);
+        drawDisc(xyTop, data.sun, "#fdb813", topCtx, topCanvas);
+        drawImageDisc(xyTop, data.moon, "img/moon_phases-sheet.png", topCtx)
+
+
 
       })
 
