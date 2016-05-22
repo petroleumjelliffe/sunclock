@@ -6,7 +6,7 @@
 </head>
 
 <body>
-  <canvas id="topCanvas" width="400" height="400" style="border:1px solid #d3d3d3;"></canvas>
+  <canvas id="topCanvas" width="144" height="168" style="border:1px solid #d3d3d3;"></canvas>
   <canvas id="myCanvas" width="800" height="300" style="border:1px solid #d3d3d3;"></canvas>
   <!-- <canvas id="myCanvas" width="144" height="56" style="border:1px solid #d3d3d3;"></canvas> -->
 
@@ -61,7 +61,7 @@
         //draw polar coords as seen from above
         function xyTop(azimuth, altitude, c) {
           var obj ={}
-          var dAz =  -Math.PI/2;  //correct for diff in 0º between the canvas and compass
+          var dAz =  Math.PI/2;  //correct for diff in 0º between the canvas and compass
 
           var r1 = Math.cos(altitude) * c.width/2
           obj.x = r1 * Math.cos(azimuth+dAz) + c.width/2
@@ -85,8 +85,6 @@
 
         function drawImageDisc(func, pos, src, ctx) {
           var p = func(pos.azimuth, pos.altitude, c)
-          // var x1 = (pos.azimuth / 2 / Math.PI * c.width) + c.width/2;
-          // var y1 = c.height - ((pos.altitude * 2 / Math.PI) * c.height);
           var r = c.height/10
           var apparentAngle  = data.moonPhase.angle - pos.parallacticAngle;
 
@@ -107,37 +105,6 @@
           img.src = src; //triggers onLoad()
         }
 
-
-        //draw sky
-        ctx.fillStyle = colors[data.partOfDay];
-        console.log(data.partOfDay);
-
-        // ctx.fillStyle = "#7ec0ee";
-        ctx.fillRect(0, 0, c.width, c.height);
-
-        ctx.lineWidth = 0.25;
-        ctx.strokeStyle = "#ffffff";
-
-
-
-        //draw altitude lines
-        for(var i=0; i<6; i++) {
-          var y = Math.ceil(c.height* (1 - Math.sin(Math.PI* i /12))) +0.5;
-          ctx.moveTo(0, y);
-          ctx.lineTo(c.width, y);
-
-          ctx.stroke();
-
-        }
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-
-        ctx.font = c.height/56*10+"px Arial";
-        ctx.fillText("E",c.width/4,c.height);
-        ctx.fillText("S",c.width/2,c.height);
-        ctx.fillText("W",c.width/4*3,c.height);
-
-
         //draw paths of sun and moon
         function drawArc(func, points, ctx, c) {
           console.log(arcPoints);
@@ -145,15 +112,6 @@
           ctx.beginPath();
           points.reduce(function(p1, p2, i, array) {
             if (i>0) {
-              // x1 = (p1.azimuth / 2 / Math.PI * c.width) + c.width/2;
-              // y1 = c.height - ((p1.altitude * 2 / Math.PI) * c.height);
-              // ctx.moveTo(x1,y1);
-              //
-              // x2 = (p2.azimuth / 2 / Math.PI * c.width) + c.width/2;
-              // y2 = c.height - ((p2.altitude * 2 / Math.PI) * c.height);
-              //
-              // ctx.lineTo(x2,y2);
-              // ctx.stroke();
               var xy1 = func(p1.azimuth, p1.altitude, c)
               ctx.moveTo(xy1.x,xy1.y);
 
@@ -166,24 +124,31 @@
           }, {} );
           ctx.restore();
         }
-        // function drawEllipse(points, ctx, c) {
-        //   ctx.save();
-        //   ctx.beginPath();
-        //   points.reduce(function(p1, p2, i, array) {
-        //     if (i>0) {
-        //       var xy1 = xyTop(p1.azimuth, p1.altitude, c)
-        //       ctx.moveTo(xy1.x,xy1.y);
-        //
-        //       var xy2 = xyTop(p2.azimuth, p2.altitude, c)
-        //       ctx.lineTo(xy2.x,xy2.y);
-        //       ctx.stroke();
-        //     }
-        //
-        //     return p2;
-        //   }, {} );
-        //   ctx.restore();
-        // }
 
+        //draw sky
+        ctx.fillStyle = colors[data.partOfDay];
+        // console.log(data.partOfDay);
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.lineWidth = 0.25;
+        ctx.strokeStyle = "#ffffff";
+
+        //draw altitude lines
+        for(var i=0; i<6; i++) {
+          var y = Math.ceil(c.height* (1 - Math.sin(Math.PI* i /12))) +0.5;
+          ctx.moveTo(0, y);
+          ctx.lineTo(c.width, y);
+          ctx.stroke();
+        }
+        //set up side view
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+        //draw compass direction labels
+        ctx.font = c.height/56*10+"px Arial";
+        ctx.fillText("E",c.width/4,c.height);
+        ctx.fillText("S",c.width/2,c.height);
+        ctx.fillText("W",c.width/4*3,c.height);
+
+        //draw paths above horizon
         drawArc(xySide, arcPoints.sun, ctx, c);
         drawArc(xySide, arcPoints.moon, ctx, c);
 
@@ -191,6 +156,7 @@
         drawDisc(xySide, data.sun, "#fdb813", ctx, c);
         drawImageDisc(xySide, data.moon, "img/moon_phases-sheet.png", ctx)
 
+        //draw top view
         topCtx.beginPath();
         topCtx.arc(topCanvas.width/2,topCanvas.height/2,topCanvas.width/2,0,2*Math.PI);
         topCtx.stroke();
