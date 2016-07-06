@@ -7,7 +7,8 @@
 
 <body>
   <canvas id="topCanvas" width="144" height="168" style="border:1px solid #d3d3d3;"></canvas>
-  <canvas id="myCanvas" width="800" height="300" style="border:1px solid #d3d3d3;"></canvas>
+  <canvas id="globeCanvas" width="800" height="400" style="border:1px solid #d3d3d3;"></canvas>
+  <canvas id="myCanvas" width="1600" height="400" style="border:1px solid #d3d3d3;"></canvas>
   <!-- <canvas id="myCanvas" width="144" height="56" style="border:1px solid #d3d3d3;"></canvas> -->
 
   <!-- <p style="background:#f00;"><img src="img/072075348d410a448a70855677fedfa1.jpg" height="800" width="400"/></p> -->
@@ -46,6 +47,9 @@
       var topCanvas = document.getElementById("topCanvas");
       var topCtx = topCanvas.getContext("2d");
 
+      var globeCanvas = document.getElementById("globeCanvas");
+      var globeCtx = globeCanvas.getContext("2d");
+
       var colors = getColors(ctx, c.width, c.height);
 
       $.getJSON("/now", function(data) {
@@ -70,6 +74,24 @@
           return obj;
         }
 
+        function halfGlobe(azimuth, altitude, c) {
+          var obj ={}
+          var dAz =  Math.PI;  //correct for diff in 0º between the canvas and compass
+
+          var r1 = -c.height
+          obj.x = r1 * Math.cos(altitude) * Math.cos(azimuth+dAz) + c.width/2
+          obj.y = r1 * Math.sin(altitude) + c.height
+
+
+          return obj;
+
+        }
+
+        function createXY(dAz, dAlt, func) {
+          return func;
+
+        }
+
         function drawDisc(func, pos, color, ctx, c) {
           var p = func(pos.azimuth, pos.altitude, c)
           var r = c.height/10
@@ -83,23 +105,77 @@
           ctx.restore();
         }
 
-        function drawImageDisc(func, pos, src, ctx) {
+        function drawImageDisc(func, pos, src, ctx, c) {
           var p = func(pos.azimuth, pos.altitude, c)
           var r = c.height/10
           var apparentAngle  = data.moonPhase.angle - pos.parallacticAngle;
 
           var img = document.createElement('IMG');
-          var spriteOffset = Math.ceil(data.moonPhase.phase*8)%8
           //draw image after loading
           img.onload = function () {
+            //assume spritesheet is made up of squares
+            //h/w should be # of sprites
+            var sprites = parseInt(img.naturalWidth / img.naturalHeight);
+            var spriteOffset = Math.ceil(data.moonPhase.phase*sprites)%sprites-1
+            console.log(sprites)
             console.log(spriteOffset)
             ctx.save()
-            ctx.translate(x1, y1)
+            ctx.translate(p.x, p.y)
             ctx.rotate(apparentAngle);
-          	ctx.translate(-x1, -y1);
-            ctx.drawImage(this, spriteOffset * 316 , 0, img.naturalHeight, img.naturalHeight, x1-r,y1-r, 2*r, 2*r);
+          	ctx.translate(-p.x, -p.y);
+            ctx.globalCompositeOperation = 'screen';
+            ctx.drawImage(this, spriteOffset * img.naturalHeight , 0, img.naturalHeight, img.naturalHeight, p.x-r,p.y-r, 2*r, 2*r);
             ctx.restore();
           }
+
+
+          // Specify the src to load the image
+          img.src = src; //triggers onLoad()
+        }
+        function drawShadow(pos, src, ctx, c) {
+          var dAz=Math.PI/2;
+          // topCtx.lineWidth=2.0;
+          // topCtx.strokeStyle='#000';
+          // topCtx.beginPath();
+          // var cx = topCanvas.width/2;
+          // var cy = topCanvas.height/2
+          // topCtx.moveTo(cx, cy);
+          // var shadowR = 100*Math.cos(pos.azimuth);
+          // var shadowX = shadowR*Math.cos(pos.azimuth+Math.PI+dAz);
+          // var shadowY = shadowR*Math.sin(pos.azimuth+Math.PI+dAz);
+
+
+          // topCtx.lineTo(cx + shadowX, cy + shadowY);
+          // topCtx.stroke();
+
+          // var p = func(pos.azimuth, pos.altitude, c)
+          // var r = c.height/10
+
+          var img = document.createElement('IMG');
+          //draw image after loading
+          img.onload = function () {
+            var r =  c.height/ img.naturalHeight*.5
+            var h = c.height/Math.tan(pos.altitude)*.5
+            var w = r * img.naturalWidth
+
+            console.log("shadow");
+            ctx.save()
+            console.log(w);
+            //move bottom center of shadow to origin
+            // ctx.drawImage(this, 0,0, img.naturalWidth, img.naturalHeight, (c.width/2)-w/2,(c.height/2)-h, w, h);
+            ctx.translate((c.width/2), (c.height/2));
+            //
+            // //rotate to opposite side of sun's azimuth
+            // // ctx.rotate(pos.azimuth+Math.PI+dAz);
+            ctx.rotate(-Math.PI/3);
+            ctx.translate((-c.width/2), (-c.height/2));
+
+          	// ctx.translate(-30,60);
+            // ctx.globalCompositeOperation = 'screen';
+            ctx.drawImage(this, 0,0, img.naturalWidth, img.naturalHeight, (c.width/2)-w/2,(c.height/2)-h, w, h);
+            ctx.restore();
+          }
+
 
           // Specify the src to load the image
           img.src = src; //triggers onLoad()
@@ -127,6 +203,10 @@
 
         //draw sky
         ctx.fillStyle = colors[data.partOfDay];
+        topCtx.fillStyle="#7ec0ee"
+        globeCtx.fillStyle="#7ec0ee"
+        topCtx.fillRect(0,0,topCanvas.width, topCanvas.height)
+        globeCtx.fillRect(0,0,globeCanvas.width, globeCanvas.height)
         // console.log(data.partOfDay);
         ctx.fillRect(0, 0, c.width, c.height);
         ctx.lineWidth = 0.25;
@@ -153,18 +233,45 @@
         drawArc(xySide, arcPoints.moon, ctx, c);
 
         //draw sun and moon
+        drawImageDisc(xySide, data.moon, "img/phases-sheet.png", ctx, c)
         drawDisc(xySide, data.sun, "#fdb813", ctx, c);
-        drawImageDisc(xySide, data.moon, "img/moon_phases-sheet.png", ctx)
+        // drawDisc(xySide, data.moon, "#ccc", ctx, c)
 
         //draw top view
         topCtx.beginPath();
         topCtx.arc(topCanvas.width/2,topCanvas.height/2,topCanvas.width/2,0,2*Math.PI);
         topCtx.stroke();
+        //draw globe view
+        globeCtx.beginPath();
+        globeCtx.arc(globeCanvas.width/2,globeCanvas.height,globeCanvas.width/2,0,2*Math.PI);
+        globeCtx.stroke();
 
         drawArc(xyTop, arcPoints.sun, topCtx, topCanvas);
         drawArc(xyTop, arcPoints.moon, topCtx, topCanvas);
+
+        topCtx.lineWidth=2.0;
+        topCtx.strokeStyle='#000';
+        topCtx.beginPath();
+        var cx = topCanvas.width/2;
+        var cy = topCanvas.height/2
+        topCtx.moveTo(cx, cy);
+        var shadowR = 100*Math.cos(data.sun.azimuth);
+        var shadowX = shadowR*Math.cos(data.sun.azimuth+Math.PI+Math.PI/2);
+        var shadowY = shadowR*Math.sin(data.sun.azimuth+Math.PI+Math.PI/2);
+
+        topCtx.lineTo(cx + shadowX, cy + shadowY);
+        topCtx.stroke();
+
+        drawShadow(data.sun,"img/shadow.png", topCtx, topCanvas)
+
+        drawImageDisc(xyTop, data.moon, "img/phases-sheet.png", topCtx, topCanvas)
         drawDisc(xyTop, data.sun, "#fdb813", topCtx, topCanvas);
-        drawImageDisc(xyTop, data.moon, "img/moon_phases-sheet.png", topCtx)
+        // drawDisc(xyTop, data.moon, "#ccc", topCtx, topCanvas)
+
+        drawArc(halfGlobe, arcPoints.sun, globeCtx, globeCanvas);
+        drawArc(halfGlobe, arcPoints.moon, globeCtx, globeCanvas);
+        drawImageDisc(halfGlobe, data.moon, "img/phases-sheet.png", globeCtx, globeCanvas)
+        drawDisc(halfGlobe, data.sun, "#fdb813", globeCtx, globeCanvas);
 
 
 
