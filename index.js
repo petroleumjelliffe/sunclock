@@ -215,9 +215,10 @@ app.get('/weather', function(req, res) {
   var key = req.query.forecast_key || process.env.FORECAST_API_KEY
   var lat = req.query.lat || 40.6816778; //NYC
   var lon = req.query.lon || -73.9962808; //NYC
+  console.log(key);
 
   var options = {
-    APIKey: process.env.FORECAST_API_KEY
+    "APIKey": key
   }
   var forecast = new Forecast(options);
 
