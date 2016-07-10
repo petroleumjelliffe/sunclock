@@ -39,7 +39,7 @@
     }
 
 
-    $.getJSON("/sunmoon", function(arcPoints) {
+    $.getJSON("/sunmoon/positions", function(arcPoints) {
       console.log(arcPoints);
       var c = document.getElementById("myCanvas");
       var ctx = c.getContext("2d");
@@ -52,7 +52,7 @@
 
       var colors = getColors(ctx, c.width, c.height);
 
-      $.getJSON("/now", function(data) {
+      $.getJSON("/sunmoon/now", function(data) {
         console.log(data);
         //translate polar coords as seen from side
         function xySide(azimuth, altitude, c) {
