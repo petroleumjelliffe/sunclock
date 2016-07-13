@@ -38,26 +38,34 @@ router.get('/now', function(req, res, next) {
   next();
 })
 
-// respond with "hello world" when a GET request is made to the homepage
-router.get('/positions', function(req, res, next) {
-  //console.log(req);
+function listTimes(interval, rise, set) {
+  var deltaT = interval * 60 * 1000;
 
-  function listTimes(interval, rise, set) {
-    var deltaT = interval * 60 * 1000;
+  //how many n minute intervals of light are there?
+  var lightIntervals = Math.abs((set.getTime() - rise.getTime()) / (deltaT));
 
-    //how many n minute intervals of light are there?
-    var lightIntervals = Math.abs((set.getTime() - rise.getTime()) / (deltaT));
+  var times=[];
 
-    var times=[];
-
-    for (var i=0; i < lightIntervals; i++) {
-      var dateTime = new Date(rise.getTime() + (i * deltaT))
-      times.push(dateTime)
-    }
-
-    return times;
+  for (var i=0; i < lightIntervals; i++) {
+    var dateTime = new Date(rise.getTime() + (i * deltaT))
+    times.push(dateTime)
   }
 
+  return times;
+}
+
+
+// respond with "hello world" when a GET request is made to the homepage
+router.get('/positions', function(req, res, next) {
+  var lat = req.query.lat || 40.6816778; //NYC
+  var lon = req.query.lon || -73.9962808; //NYC
+  var now = new Date()
+  var today = new Date()
+  today.setHours(0,0,0,0)
+  var tomorrow = new Date();
+  tomorrow.setHours(23,45);
+  console.log(today);
+  console.log(tomorrow);
   function plotArc(fnPos, dateArray) {
     console.log(dateArray)
 
@@ -68,13 +76,10 @@ router.get('/positions', function(req, res, next) {
 
   }
 
-  var lat = req.query.lat || 40.6816778; //NYC
-  var lon = req.query.lon || -73.9962808; //NYC
-  var now = new Date()
-
   var sunTimes = sunCalc.getTimes(now, lat, lon);
   var moonTimes = sunCalc.getMoonTimes(now, lat, lon);
 
+  var allDayTimes = listTimes(15, today, tomorrow)
 
   var daylightTimes = listTimes(15, sunTimes.sunrise, sunTimes.sunset) //array of times to get positions for
 
@@ -96,13 +101,14 @@ router.get('/positions', function(req, res, next) {
     console.log("always down");
   }
 
+  console.log(allDayTimes);
 
   var arcs = {}
-  arcs.sun = plotArc(sunCalc.getPosition, daylightTimes)
-  arcs.moon = plotArc(sunCalc.getMoonPosition, moonlightTimes)
+  arcs.sun = plotArc(sunCalc.getPosition, allDayTimes)
+  arcs.moon = plotArc(sunCalc.getMoonPosition, allDayTimes)
 
   res.json(arcs);
-  
+
   next();
 });
 
