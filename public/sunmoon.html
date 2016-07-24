@@ -109,8 +109,8 @@
           // Specify the src to load the image
           img.src = src; //triggers onLoad()
         }
-        function drawShadow(pos, src, ctx, c) {
-          var dAz=Math.PI/2;
+        function drawShadow(pos, src, ctx, c, dAz) {
+          // dAz+= Math.PI/2;
 
           var img = document.createElement('IMG');
           //draw image after loading
@@ -125,7 +125,7 @@
             //center context on origin
             ctx.translate((c.width/2), (c.height/2));
             //rotate to opposite side of sun's azimuth
-            ctx.rotate(pos.azimuth);
+            ctx.rotate(pos.azimuth+dAz);
             ctx.translate((-c.width/2), (-c.height/2));
 
             // ctx.globalCompositeOperation = 'screen';
@@ -208,13 +208,14 @@
         globeCtx.arc(globeCanvas.width()/2,globeCanvas.height(),globeCanvas.width()/2,0,2*Math.PI);
         globeCtx.stroke();
 
-        drawArc(xyTop, arcPoints.sun, topCtx, topCanvas[0], 0);
-        drawArc(xyTop, arcPoints.moon, topCtx, topCanvas[0], 0);
+        var y= Math.PI;
+        drawArc(xyTop, arcPoints.sun, topCtx, topCanvas[0], y);
+        drawArc(xyTop, arcPoints.moon, topCtx, topCanvas[0], y);
 
-        drawShadow(data.sun,"img/shadow.png", topCtx, topCanvas[0], 0)
+        drawShadow(data.sun,"img/shadow.png", topCtx, topCanvas[0], y)
 
-        drawImageDisc(xyTop, data.moon, "img/phases-sheet.png", topCtx, topCanvas[0], 0)
-        drawDisc(xyTop, data.sun, "#fdb813", topCtx, topCanvas[0], 0);
+        drawImageDisc(xyTop, data.moon, "img/phases-sheet.png", topCtx, topCanvas[0], y)
+        drawDisc(xyTop, data.sun, "#fdb813", topCtx, topCanvas[0], y);
         // drawDisc(xyTop, data.moon, "#ccc", topCtx, topCanvas[0])
 
         var x = Math.PI/2 - data.sun.azimuth;
