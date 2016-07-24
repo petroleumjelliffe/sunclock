@@ -3,12 +3,13 @@
 
 
 <script   src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
+<link rel="stylesheet" type="text/css" href="./css/styles.css"/>
 </head>
 
 <body>
   <canvas id="topCanvas" width="144" height="168" style="border:1px solid #d3d3d3;"></canvas>
   <canvas id="globeCanvas" width="800" height="400" style="border:1px solid #d3d3d3;"></canvas>
-  <canvas id="myCanvas" width="1600" height="400" style="border:1px solid #d3d3d3;"></canvas>
+  <canvas id="myCanvas" width="1600" height="400" style=""></canvas>
   <!-- <canvas id="myCanvas" width="144" height="56" style="border:1px solid #d3d3d3;"></canvas> -->
 
   <!-- <p style="background:#f00;"><img src="img/072075348d410a448a70855677fedfa1.jpg" height="800" width="400"/></p> -->
@@ -41,8 +42,9 @@
 
     $.getJSON("/sunmoon/positions", function(arcPoints) {
       console.log(arcPoints);
-      var c = document.getElementById("myCanvas");
-      var ctx = c.getContext("2d");
+      // var c = document.getElementById("myCanvas");
+      var c = $("#myCanvas");
+      var ctx = c[0].getContext("2d");
 
       var topCanvas = document.getElementById("topCanvas");
       var topCtx = topCanvas.getContext("2d");
@@ -50,7 +52,7 @@
       var globeCanvas = document.getElementById("globeCanvas");
       var globeCtx = globeCanvas.getContext("2d");
 
-      var colors = getColors(ctx, c.width, c.height);
+      var colors = getColors(ctx, c.width(), c.height());
 
       $.getJSON("/sunmoon/now", function(data) {
         console.log(data);
@@ -183,39 +185,44 @@
         }
 
         //draw sky
-        ctx.fillStyle = colors[data.partOfDay];
-        topCtx.fillStyle="#7ec0ee"
-        globeCtx.fillStyle="#7ec0ee"
+        console.log(data.partOfDay);
+        // c.addClass(data.partOfDay);
+        c.addClass("sunset");
+        $("#globeCanvas").addClass(data.partOfDay);
+
+        // ctx.fillStyle = colors[data.partOfDay];
+        topCtx.fillStyle="#ccc"
+        // globeCtx.fillStyle="#7ec0ee"
         topCtx.fillRect(0,0,topCanvas.width, topCanvas.height)
-        globeCtx.fillRect(0,0,globeCanvas.width, globeCanvas.height)
+        // globeCtx.fillRect(0,0,globeCanvas.width, globeCanvas.height)
         // console.log(data.partOfDay);
-        ctx.fillRect(0, 0, c.width, c.height);
+        // ctx.fillRect(0, 0, c.width, c.height);
         ctx.lineWidth = 0.25;
         ctx.strokeStyle = "#ffffff";
 
         //draw altitude lines
         for(var i=0; i<6; i++) {
-          var y = Math.ceil(c.height* (1 - Math.sin(Math.PI* i /12))) +0.5;
+          var y = Math.ceil(c.height()* (1 - Math.sin(Math.PI* i /12))) +0.5;
           ctx.moveTo(0, y);
-          ctx.lineTo(c.width, y);
+          ctx.lineTo(c.width(), y);
           ctx.stroke();
         }
         //set up side view
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
         //draw compass direction labels
-        ctx.font = c.height/56*10+"px Arial";
-        ctx.fillText("E",c.width/4,c.height);
-        ctx.fillText("S",c.width/2,c.height);
-        ctx.fillText("W",c.width/4*3,c.height);
+        ctx.font = c.height()/56*10+"px Arial";
+        ctx.fillText("E",c.width()/4,c.height());
+        ctx.fillText("S",c.width()/2,c.height());
+        ctx.fillText("W",c.width()/4*3,c.height());
 
         //draw paths above horizon
-        drawArc(xySide, arcPoints.sun, ctx, c);
-        drawArc(xySide, arcPoints.moon, ctx, c);
+        drawArc(xySide, arcPoints.sun, ctx, c[0]);
+        drawArc(xySide, arcPoints.moon, ctx, c[0]);
 
         //draw sun and moon
-        drawImageDisc(xySide, data.moon, "img/phases-sheet.png", ctx, c)
-        drawDisc(xySide, data.sun, "#fdb813", ctx, c);
+        drawImageDisc(xySide, data.moon, "img/phases-sheet.png", ctx, c[0])
+        drawDisc(xySide, data.sun, "#fdb813", ctx, c[0]);
         // drawDisc(xySide, data.moon, "#ccc", ctx, c)
 
         //draw top view
