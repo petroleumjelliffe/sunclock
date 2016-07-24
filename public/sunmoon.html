@@ -3,7 +3,7 @@
 
 
 <script   src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
-<link rel="stylesheet" type="text/css" href="./css/styles.css"/>
+<link rel="stylesheet" type="text/css" href="./css/gradients.css"/>
 </head>
 
 <body>
@@ -15,49 +15,24 @@
   <!-- <p style="background:#f00;"><img src="img/072075348d410a448a70855677fedfa1.jpg" height="800" width="400"/></p> -->
 
   <script>
-    var getColors = function(ctx, w, h) {
-      var colors = {
-      //   sunrise	:
-        "goldenHourEnd" : "#7ec0ee",
-         "goldenHour" : "#7ec0ee",
-        "sunsetStart" : "#F60",
-      //   sunset
-      //   dusk
-         "nauticalDusk" : "#f00",
-        "night" : "#280137"
-      //   nadir
-      //   nightEnd
-      //   nauticalDawn
-      //   dawn
-      }
-
-      var my_gradient=ctx.createLinearGradient(0,0,0,h);
-      my_gradient.addColorStop(0.95,"blue");
-      my_gradient.addColorStop(1.0,"#FFA500");
-      colors.dusk = my_gradient;
-
-      return colors;
-    }
-
-
     $.getJSON("/sunmoon/positions", function(arcPoints) {
       console.log(arcPoints);
       // var c = document.getElementById("myCanvas");
       var c = $("#myCanvas");
       var ctx = c[0].getContext("2d");
 
-      var topCanvas = document.getElementById("topCanvas");
-      var topCtx = topCanvas.getContext("2d");
+      var topCanvas = $("#topCanvas");
+      var topCtx = topCanvas[0].getContext("2d");
 
-      var globeCanvas = document.getElementById("globeCanvas");
-      var globeCtx = globeCanvas.getContext("2d");
+      var globeCanvas = $("#globeCanvas");
+      var globeCtx = globeCanvas[0].getContext("2d");
 
-      var colors = getColors(ctx, c.width(), c.height());
+      // var colors = getColors(ctx, c.width(), c.height());
 
       $.getJSON("/sunmoon/now", function(data) {
         console.log(data);
         //translate polar coords as seen from side
-        function xySide(azimuth, altitude, c) {
+        function xySide(azimuth, altitude, c, dAz) {
           var obj ={}
           obj.x = (azimuth / 2 / Math.PI * c.width) + c.width/2;
           obj.y = c.height - ((altitude * 2 / Math.PI) * c.height);
@@ -65,9 +40,9 @@
           return obj;
         }
         //draw polar coords as seen from above
-        function xyTop(azimuth, altitude, c) {
+        function xyTop(azimuth, altitude, c, dAz) {
           var obj ={}
-          var dAz =  Math.PI/2;  //correct for diff in 0º between the canvas and compass
+          dAz += Math.PI/2;  //correct for diff in 0º between the canvas and compass
 
           var r1 = Math.cos(altitude) * c.width/2
           obj.x = r1 * Math.cos(azimuth+dAz) + c.width/2
@@ -76,9 +51,9 @@
           return obj;
         }
 
-        function halfGlobe(azimuth, altitude, c) {
+        function halfGlobe(azimuth, altitude, c, dAz) {
           var obj ={}
-          var dAz =  Math.PI;  //correct for diff in 0º between the canvas and compass
+          dAz += Math.PI;  //correct for diff in 0º between the canvas and compass
 
           var r1 = -c.height
           obj.x = r1 * Math.cos(altitude) * Math.cos(azimuth+dAz) + c.width/2
@@ -94,8 +69,8 @@
 
         }
 
-        function drawDisc(func, pos, color, ctx, c) {
-          var p = func(pos.azimuth, pos.altitude, c)
+        function drawDisc(func, pos, color, ctx, c, dAz) {
+          var p = func(pos.azimuth, pos.altitude, c, dAz)
           var r = c.height/10
 
           ctx.save();
@@ -107,8 +82,8 @@
           ctx.restore();
         }
 
-        function drawImageDisc(func, pos, src, ctx, c) {
-          var p = func(pos.azimuth, pos.altitude, c)
+        function drawImageDisc(func, pos, src, ctx, c, dAz) {
+          var p = func(pos.azimuth, pos.altitude, c, dAz)
           var r = c.height/10
           var apparentAngle  = data.moonPhase.angle - pos.parallacticAngle;
 
@@ -165,16 +140,16 @@
         }
 
         //draw paths of sun and moon
-        function drawArc(func, points, ctx, c) {
+        function drawArc(func, points, ctx, c, dAz) {
           console.log(arcPoints);
           ctx.save();
           ctx.beginPath();
           points.reduce(function(p1, p2, i, array) {
             if (i>0) {
-              var xy1 = func(p1.azimuth, p1.altitude, c)
+              var xy1 = func(p1.azimuth, p1.altitude, c, dAz)
               ctx.moveTo(xy1.x,xy1.y);
 
-              var xy2 = func(p2.azimuth, p2.altitude, c)
+              var xy2 = func(p2.azimuth, p2.altitude, c, dAz)
               ctx.lineTo(xy2.x,xy2.y);
               ctx.stroke();
             }
@@ -186,14 +161,13 @@
 
         //draw sky
         console.log(data.partOfDay);
-        // c.addClass(data.partOfDay);
-        c.addClass("sunset");
-        $("#globeCanvas").addClass(data.partOfDay);
+        c.addClass(data.partOfDay);
+        globeCanvas.addClass(data.partOfDay);
 
         // ctx.fillStyle = colors[data.partOfDay];
         topCtx.fillStyle="#ccc"
         // globeCtx.fillStyle="#7ec0ee"
-        topCtx.fillRect(0,0,topCanvas.width, topCanvas.height)
+        topCtx.fillRect(0,0,topCanvas.width(), topCanvas.height())
         // globeCtx.fillRect(0,0,globeCanvas.width, globeCanvas.height)
         // console.log(data.partOfDay);
         // ctx.fillRect(0, 0, c.width, c.height);
@@ -217,36 +191,37 @@
         ctx.fillText("W",c.width()/4*3,c.height());
 
         //draw paths above horizon
-        drawArc(xySide, arcPoints.sun, ctx, c[0]);
-        drawArc(xySide, arcPoints.moon, ctx, c[0]);
+        drawArc(xySide, arcPoints.sun, ctx, c[0], 0);
+        drawArc(xySide, arcPoints.moon, ctx, c[0], 0);
 
         //draw sun and moon
-        drawImageDisc(xySide, data.moon, "img/phases-sheet.png", ctx, c[0])
-        drawDisc(xySide, data.sun, "#fdb813", ctx, c[0]);
+        drawImageDisc(xySide, data.moon, "img/phases-sheet.png", ctx, c[0], 0)
+        drawDisc(xySide, data.sun, "#fdb813", ctx, c[0], 0);
         // drawDisc(xySide, data.moon, "#ccc", ctx, c)
 
         //draw top view
         topCtx.beginPath();
-        topCtx.arc(topCanvas.width/2,topCanvas.height/2,topCanvas.width/2,0,2*Math.PI);
+        topCtx.arc(topCanvas.width()/2,topCanvas.height()/2,topCanvas.width()/2,0,2*Math.PI);
         topCtx.stroke();
         //draw globe view
         globeCtx.beginPath();
-        globeCtx.arc(globeCanvas.width/2,globeCanvas.height,globeCanvas.width/2,0,2*Math.PI);
+        globeCtx.arc(globeCanvas.width()/2,globeCanvas.height(),globeCanvas.width()/2,0,2*Math.PI);
         globeCtx.stroke();
 
-        drawArc(xyTop, arcPoints.sun, topCtx, topCanvas);
-        drawArc(xyTop, arcPoints.moon, topCtx, topCanvas);
+        drawArc(xyTop, arcPoints.sun, topCtx, topCanvas[0], 0);
+        drawArc(xyTop, arcPoints.moon, topCtx, topCanvas[0], 0);
 
-        drawShadow(data.sun,"img/shadow.png", topCtx, topCanvas)
+        drawShadow(data.sun,"img/shadow.png", topCtx, topCanvas[0], 0)
 
-        drawImageDisc(xyTop, data.moon, "img/phases-sheet.png", topCtx, topCanvas)
-        drawDisc(xyTop, data.sun, "#fdb813", topCtx, topCanvas);
-        // drawDisc(xyTop, data.moon, "#ccc", topCtx, topCanvas)
+        drawImageDisc(xyTop, data.moon, "img/phases-sheet.png", topCtx, topCanvas[0], 0)
+        drawDisc(xyTop, data.sun, "#fdb813", topCtx, topCanvas[0], 0);
+        // drawDisc(xyTop, data.moon, "#ccc", topCtx, topCanvas[0])
 
-        drawArc(halfGlobe, arcPoints.sun, globeCtx, globeCanvas);
-        drawArc(halfGlobe, arcPoints.moon, globeCtx, globeCanvas);
-        drawImageDisc(halfGlobe, data.moon, "img/phases-sheet.png", globeCtx, globeCanvas)
-        drawDisc(halfGlobe, data.sun, "#fdb813", globeCtx, globeCanvas);
+        var x = Math.PI/2 - data.sun.azimuth;
+        drawArc(halfGlobe, arcPoints.sun, globeCtx, globeCanvas[0], x);
+        drawArc(halfGlobe, arcPoints.moon, globeCtx, globeCanvas[0], x);
+        drawImageDisc(halfGlobe, data.moon, "img/phases-sheet.png", globeCtx, globeCanvas[0], x)
+        drawDisc(halfGlobe, data.sun, "#fdb813", globeCtx, globeCanvas[0], x);
 
 
 
