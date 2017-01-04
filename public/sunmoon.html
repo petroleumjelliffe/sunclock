@@ -380,61 +380,13 @@
     });
   });
 
-
-
-  //draw views
-
-  //
-  // var changeTime = function() {
-  //   var now = new Date()
-  //   var obj={};
-  //   obj.time = now.getTime();
-  //   obj.date = now.getDate();
-  //
-  //   //get a new position object
-  //   $.getJSON("/sunmoon/now", obj, function(){
-  //
-  //   })
-  //
-  //   //redraw views
-  //
-  // }
-  //
-  // $.getJSON("/sunmoon/positions", function(arcPoints) {
-  //     // console.log(arcPoints);
-  //
-  //     $.getJSON("/sunmoon/now", function(data) {
-  //       // console.log(data);
-  //       // nowPos = data;
-  //
-  //       //attach the on change callback functions here so they have access to the data points.
-  //       $("#azimuth").on("input", function() {
-  //         console.log(this.value);
-  //         sideView(sideCtx, arcPoints, data, this.value*Math.PI);
-  //         drawGlobe(globeCtx, arcPoints, data, this.value*Math.PI);
-  //         drawTop(topCtx, arcPoints, data, this.value*Math.PI);
-  //       })
-  //
-  //       //draw sky
-  //       console.log(data.partOfDay);
-  //
-  //       //apply sky gradient based on what part of day it is
-  //       sideCanvas.addClass(data.partOfDay);
-  //
-  //       sideView(sideCtx, arcPoints, data, 0);
-  //       drawGlobe(globeCtx, arcPoints, data, 0);
-  //       drawTop(topCtx, arcPoints, data, 0);
-  //
-  //       // globeCanvas.addClass(data.partOfDay);
-  //       $("#globeContainer").addClass(data.partOfDay);
-  //
-  //
-  //
-  //
-  //
-  //     })
-  //
-  //   });
+  //attach the on change callback functions here so they have access to the data points.
+  $("#azimuth").on("input", function() {
+    console.log(this.value);
+    globe.sideView(sideCtx, this.value);
+    globe.drawGlobe(globeCtx, this.value);
+    globe.drawTop(topCtx, this.value);
+  })
 
   </script>
 
