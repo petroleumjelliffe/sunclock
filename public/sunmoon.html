@@ -42,9 +42,9 @@
 
     //COORDINATE functions
     //translate polar coords as seen from side
-    var xySide = function(azimuth, altitude, c, dAz) {
-      var x = ((azimuth+dAz) / 2 / Math.PI * c.width) + c.width/2;
-      var y = c.height - (Math.sin(altitude) * c.height);
+    var xySide = function(azimuth, altitude, canvas, dAz) {
+      var x = ((azimuth+dAz) / 2 / Math.PI * canvas.width) + canvas.width/2;
+      var y = canvas.height - (Math.sin(altitude) * canvas.height);
 
       return {
         x: x,
@@ -52,12 +52,12 @@
       };
     }
     //draw polar coords as seen from above
-    var xyTop = function(azimuth, altitude, c, dAz) {
+    var xyTop = function(azimuth, altitude, canvas, dAz) {
       dAz += Math.PI/2;  //correct for diff in 0º between the canvas and compass
 
-      var r1 = Math.cos(altitude) * c.width/2
-      var x = r1 * Math.cos(azimuth+dAz) + c.width/2
-      var y = r1 * Math.sin(azimuth+dAz) + c.height/2
+      var r1 = Math.cos(altitude) * canvas.width/2
+      var x = r1 * Math.cos(azimuth+dAz) + canvas.width/2
+      var y = r1 * Math.sin(azimuth+dAz) + canvas.height/2
 
       return {
         x: x,
@@ -65,12 +65,12 @@
       };
     }
 
-    var halfGlobe = function(azimuth, altitude, c, dAz) {
+    var halfGlobe = function(azimuth, altitude, canvas, dAz) {
       dAz += Math.PI;  //correct for diff in 0º between the canvas and compass
 
-      var r1 = -c.height
-      var x = r1 * Math.cos(altitude) * Math.cos(azimuth+dAz) + c.width/2
-      var y = r1 * Math.sin(altitude) + c.height
+      var r1 = -canvas.height
+      var x = r1 * Math.cos(altitude) * Math.cos(azimuth+dAz) + canvas.width/2
+      var y = r1 * Math.sin(altitude) + canvas.height
 
       return {
         x: x,
@@ -79,24 +79,24 @@
     }
 
     //DRAWING PRIMITIVES
-    var drawDisc = function(func, pos, color, ctx, dAz) {
+    var drawDisc = function(func, sun, color, ctx, dAz) {
       // console.log(canvas);
       //
       // var ctx = canvas.getContext("2d");
-      console.log("ctx height: " + ctx.canvas.height);
+      // console.log("ctx height: " + ctx.canvas.height);
       // console.log("canvas height: " + canvas.height);
 
 
-      var p = func(pos.azimuth, pos.altitude, ctx.canvas, dAz)
+      var p = func(sun.azimuth, sun.altitude, ctx.canvas, dAz)
       var r = ctx.canvas.height/10
 
-      // ctx.save();
+      ctx.save();
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, 2 * Math.PI);
       ctx.closePath();
       ctx.fill();
-      // ctx.restore();
+      ctx.restore();
     }
 
     var drawMoon = function(func, pos, src, ctx, dAz) {
@@ -104,7 +104,7 @@
       c.width = ctx.canvas.width;
       c.height = ctx.canvas.height;
 
-      var p = func(pos.moon.azimuth, pos.moon.altitude, ctx, dAz)
+      var p = func(pos.moon.azimuth, pos.moon.altitude, ctx.canvas, dAz)
       var r = c.height/10
       var apparentAngle  = pos.moonPhase.angle - pos.moon.parallacticAngle - Math.PI/2;
 
@@ -115,13 +115,13 @@
         //h/w should be # of sprites
         var sprites = parseInt(img.naturalWidth / img.naturalHeight);
         var spriteOffset = Math.ceil(pos.moonPhase.phase*sprites)%sprites-1
-        // console.log(sprites)
-        // console.log(spriteOffset)
+        console.log(sprites)
+        console.log(spriteOffset)
         ctx.save()
         ctx.translate(p.x, p.y)
         ctx.rotate(apparentAngle);
         ctx.translate(-p.x, -p.y);
-        ctx.globalCompositeOperation = 'screen';
+        ctx.globalCompositeOperation = 'source-over';
         ctx.drawImage(this, spriteOffset * img.naturalHeight , 0, img.naturalHeight, img.naturalHeight, p.x-r,p.y-r, 2*r, 2*r);
         ctx.restore();
       }
@@ -147,7 +147,7 @@
 
         console.log("shadow");
         ctx.save()
-        console.log(w);
+        // console.log(w);
         //center context on origin
         ctx.translate((c.width/2), (c.height/2));
         //rotate to opposite side of sun's azimuth
@@ -168,11 +168,10 @@
       c.width = ctx.canvas.width;
       c.height = ctx.canvas.height;
 
-      console.log(points);
+      // console.log(points);
       ctx.save();
       ctx.beginPath();
       points.reduce(function(p1, p2, i, array) {
-        console.log(p1 == null);
         if (p1!== null && i>0) {
           var xy1 = func(p1.azimuth, p1.altitude, c, dAz)
           ctx.moveTo(xy1.x,xy1.y);
@@ -242,12 +241,14 @@
       ctx.fillText("W", (c.width * (3 * Math.PI/2+dAz)/ (2 * Math.PI))%c.width, c.height);
 
       console.log("spec.arcPoints:");
-      console.log(spec.arcPoints);
+      // console.log(spec.arcPoints);
       //draw paths above horizon
       drawArc(xySide, spec.arcPoints.sun, ctx, dAz);
       drawArc(xySide, spec.arcPoints.moon, ctx, dAz);
 
       //draw sun and moon
+      console.log("spec.position:");
+      console.log(spec.position);
       drawMoon(xySide, spec.position, "img/phases-sheet.png", ctx, dAz)
       drawDisc(xySide, spec.position.sun, "#fdb813", ctx, dAz);
       // drawDisc(xySide, data.moon, "#ccc", c)
@@ -320,10 +321,6 @@
       $.getJSON("/sunmoon/positions", function(newArcPoints) {
         spec.arcPoints = newArcPoints;
 
-        console.log("spec.arcPoints");
-        console.log(spec.arcPoints);
-
-
         callback();
       })
     }
@@ -331,10 +328,6 @@
 
       $.getJSON("/sunmoon/now",{"timestamp": timestamp}, function(newPosition) {
         spec.position = newPosition;
-
-        console.log("spec.position");
-        console.log(spec.position);
-
 
         callback();
       })
@@ -373,14 +366,12 @@
       globe.drawGlobe(globeCtx, 0);
       globe.drawTop(topCtx, 0);
 
-      sideCanvas.addClass(globe.getPartOfDay());
-      $("#globeContainer").attr("class", globe.getPartOfDay());
 
 
     });
   });
 
-  var dAz=0;
+  var dAz=1;
   //attach the on change callback functions here so they have access to the data points.
   $("#azimuth").on("input", function() {
     console.log(this.value);
@@ -405,6 +396,11 @@
       globe.drawGlobe(globeCtx, dAz);
       globe.drawTop(topCtx, dAz);
     }, timestamp.toJSON())
+
+
+    sideCanvas.attr("class", globe.getPartOfDay());
+    $("#globeContainer").attr("class", globe.getPartOfDay());
+
 
   })
 
