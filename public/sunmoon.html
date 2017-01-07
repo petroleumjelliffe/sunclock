@@ -17,11 +17,11 @@
 
   <div>
     <form id="controls">
-      <label>Time of day</label>
+      <label for="time">Time of day</label>
       <input id="time_of_day" name="time" type="range" min="0" max="24" step=".25">
 
-      <label>Angle</label>
-      <input id="azimuth" name="time" type="range" min="-1" max="1" step=".125">
+      <label for="angle">Angle</label>
+      <input id="azimuth" name="angle" type="range" min="-1" max="1" step=".125">
 
     </form>
 
@@ -327,9 +327,9 @@
         callback();
       })
     }
-    that.updatePosition = function(callback) {
+    that.updatePosition = function(callback, timestamp) {
 
-      $.getJSON("/sunmoon/now", function(newPosition) {
+      $.getJSON("/sunmoon/now",{"timestamp": timestamp}, function(newPosition) {
         spec.position = newPosition;
 
         console.log("spec.position");
@@ -374,18 +374,38 @@
       globe.drawTop(topCtx, 0);
 
       sideCanvas.addClass(globe.getPartOfDay());
-      $("#globeContainer").addClass(globe.getPartOfDay());
+      $("#globeContainer").attr("class", globe.getPartOfDay());
 
 
     });
   });
 
+  var dAz=0;
   //attach the on change callback functions here so they have access to the data points.
   $("#azimuth").on("input", function() {
     console.log(this.value);
-    globe.sideView(sideCtx, this.value);
-    globe.drawGlobe(globeCtx, this.value);
-    globe.drawTop(topCtx, this.value);
+    dAz = this.value*Math.PI;
+
+    globe.sideView(sideCtx, dAz);
+    globe.drawGlobe(globeCtx, dAz);
+    globe.drawTop(topCtx, dAz);
+  })
+
+  //changing time requires a JSON call, so should only be triggered on change
+  $("#time_of_day").on("change", function() {
+    console.log(this.value);
+
+    timestamp = new Date();
+    timestamp.setHours(this.value, this.value%1*60,0,0);
+    console.log(timestamp);
+
+    //updatePosition needs to take a time parameter to request a time not now
+    globe.updatePosition(function() {
+      globe.sideView(sideCtx, dAz);
+      globe.drawGlobe(globeCtx, dAz);
+      globe.drawTop(topCtx, dAz);
+    }, timestamp.toJSON())
+
   })
 
   </script>

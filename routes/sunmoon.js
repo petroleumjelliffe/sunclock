@@ -11,7 +11,8 @@ var router = express.Router();
 
 // respond with "hello world" when a GET request is made to the homepage
 router.get('/now', function(req, res, next) {
-  var now = new Date()
+  // var now = new Date()
+  var now = (req.query.timestamp) ? new Date(req.query.timestamp) : new Date()
   var lat = req.query.lat || 40.6816778; //NYC
   var lon = req.query.lon || -73.9962808; //NYC
 
@@ -59,18 +60,22 @@ function listTimes(interval, rise, set) {
 router.get('/positions', function(req, res, next) {
   var lat = req.query.lat || 40.6816778; //NYC
   var lon = req.query.lon || -73.9962808; //NYC
+
+
+
   var now = new Date()
+  now.setHours(req.query.hours%24, req.query.hours)
   var today = new Date()
   today.setHours(0,0,0,0)
   var tomorrow = new Date();
   tomorrow.setHours(23,45);
-  console.log(today);
-  console.log(tomorrow);
+  // console.log(today);
+  // console.log(tomorrow);
   function plotArc(fnPos, dateArray) {
-    console.log(dateArray)
+    // console.log(dateArray)
 
     return dateArray.map(function(date, index, array) {
-      console.log(date)
+      // console.log(date)
       return fnPos(date, lat, lon)
     })
 
@@ -81,25 +86,27 @@ router.get('/positions', function(req, res, next) {
 
   var allDayTimes = listTimes(15, today, tomorrow)
 
-  var daylightTimes = listTimes(15, sunTimes.sunrise, sunTimes.sunset) //array of times to get positions for
-
-  var moonlightTimes = []; //empty array of moon points
-
-  if (!moonTimes.alwaysDown) {
-    if(!moonTimes.alwaysUp) {
-      console.log("rise/set");
-      console.log(moonTimes);
-      moonlightTimes = listTimes(15, moonTimes.rise, moonTimes.set);
-      console.log(moonlightTimes);
-    } else {
-      console.log("always down");
-
-      //if moon doesn't set get all 24 hours worth
-      moonlightTimes = listTimes(15, now, new Date(now.getTime() + (24 * 60 * 60 * 1000)));
-    }
-  } else {
-    console.log("always down");
-  }
+  // var daylightTimes = listTimes(15, sunTimes.sunrise, sunTimes.sunset) //array of times to get positions for
+  //
+  // // var moonlightTimes = []; //empty array of moon points
+  // var moonlightTimes = listTimes(moonTimes.rise || today, moonTimes.set || tomorrow);
+  //
+  // if (!moonTimes.alwaysDown) {
+  //   if(!moonTimes.alwaysUp) {
+  //     console.log("rise/set");
+  //     console.log(moonTimes);
+  //     moonlightTimes = listTimes(15, moonTimes.rise, moonTimes.set);
+  //     console.log("rise and set");
+  //     console.log(moonlightTimes);
+  //   } else {
+  //     console.log("always up");
+  //
+  //     //if moon doesn't set get all 24 hours worth
+  //     moonlightTimes = listTimes(15, now, new Date(now.getTime() + (24 * 60 * 60 * 1000)));
+  //   }
+  // } else {
+  //   console.log("always down");
+  // }
 
   console.log(allDayTimes);
 
