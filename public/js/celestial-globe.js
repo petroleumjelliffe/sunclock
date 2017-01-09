@@ -1,6 +1,10 @@
+//format
+
 //CELESIAL GLOBE OBJECT DEFINITION
 var CelestialGlobe= function(spec) {
   //spec is options sent to constructor
+  spec.lat = spec.lat||40.6816778, //NYC
+  spec.lon = spec.lon||-73.9962808, //NYC
   spec.arcPoints = spec.arcPoints||{};
   spec.position = spec.position||{};
   spec.timestamp = spec.timestamp||new Date();
@@ -300,20 +304,25 @@ var CelestialGlobe= function(spec) {
   }
 
   that.updateArcs = function(callback) {
-    $.getJSON("/sunmoon/positions", function(newArcPoints) {
-      spec.arcPoints = newArcPoints;
+    $.getJSON("/sunmoon/positions", {
+      "lat":spec.lat,
+      "lon":spec.lon, //NYC
+      "timestamp": spec.timestamp.toJSON()},
+      function(newArcPoints) {
+        spec.arcPoints = newArcPoints;
 
       callback();
     })
   }
+
   that.updatePosition = function(callback) {
 
     $.getJSON("/sunmoon/now", {
-      "lat":40.6816778, //NYC
-      "lon":-73.9962808, //NYC
+      "lat":spec.lat,
+      "lon":spec.lon, //NYC
       "timestamp": spec.timestamp.toJSON()},
       function(newPosition) {
-      spec.position = newPosition;
+        spec.position = newPosition;
 
       callback();
     })

@@ -51,6 +51,7 @@
   var options = {}
   var globe = new CelestialGlobe(options);
 
+  var dAz = 0;
 
   globe.updatePosition(function() {
     console.log("position updated!");
@@ -64,13 +65,13 @@
       globe.topView(topCtx, 0);
 
       sideCanvas.attr("class", globe.getPartOfDay());
-      $("#globeContainer").attr("class", globe.getPartOfDay());
+      globeCanvas.attr("class", globe.getPartOfDay());
 
 
     });
   });
 
-  var dAz=0;
+
   //attach the on change callback functions here so they have access to the data points.
   $("#azimuth").on("input", function() {
     console.log(this.value);
@@ -98,14 +99,16 @@
 
 
     sideCanvas.attr("class", globe.getPartOfDay());
-    $("#globeContainer").attr("class", globe.getPartOfDay());
+    globeCanvas.attr("class", globe.getPartOfDay());
   })
 
-  $("#date-picker").datepicker({dateFormat:"yy-mm-dd"});
+  $("#date-picker").datepicker({
+    dateFormat:"yy-mm-dd",
+    nextText: ">"});
 
   $("#date-picker").on("change", function() {
     globe.setDate(this.value);
-    
+
     globe.updatePosition(function() {
       globe.sideView(sideCtx, dAz);
       globe.globeView(globeCtx, dAz);

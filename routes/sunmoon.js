@@ -7,6 +7,36 @@ var router = express.Router();
 // /sunmoon/now
 // / sunmoon/positions
 
+var timeOfDay = sunCalc.times.sort(function(a,b) { return (a[0]>b[0])} )()
+
+var spitOutPos = function(now, lat, lon) {
+  // var nowPos = {}
+  var sunPos = sunCalc.getPosition(now, lat, lon);
+  var moonPos = sunCalc.getMoonPosition(now, lat, lon);
+  var moonPhase = sunCalc.getMoonIllumination(now);
+
+  //get current part of the day (sunrise, sunset, night, etc.)
+
+  console.log(sunCalc.times)
+  console.log(nowPos.sun.altitude*180/Math.PI);
+  // var x = timeOfDay.reduce(function(prev, cur, i, array) {
+  //   var ascending = (sunCalc.getTimes(now, lat, lon).solarNoon.getTime() > now.getTime()) ? 1 : 2
+  //   return ( nowPos.sun.altitude > (cur[0]*Math.PI/180) ? cur[ascending] : prev)
+  // }, "night")
+  // console.log(x);
+
+  var partOfDay = timeOfDay.reduce(function(prev, cur, i, array) {
+    var ascending = (sunCalc.getTimes(now, lat, lon).solarNoon.getTime() > now.getTime()) ? 1 : 2
+    return ( nowPos.sun.altitude > (cur[0]*Math.PI/180) ? cur[ascending] : prev)
+  }, "night")
+
+  return {
+    sun:sunPos,
+    moon: moonPos,
+    moonPhase: moonPhase,
+    partOfDay: partOfDay
+  }
+}
 
 
 // respond with "hello world" when a GET request is made to the homepage
@@ -16,25 +46,26 @@ router.get('/now', function(req, res, next) {
   var lat = req.query.lat || 40.6816778; //NYC
   var lon = req.query.lon || -73.9962808; //NYC
 
-  var nowPos = {}
-  nowPos.sun = sunCalc.getPosition(now, lat, lon);
-  nowPos.moon = sunCalc.getMoonPosition(now, lat, lon);
-  nowPos.moonPhase = sunCalc.getMoonIllumination(now);
+  // var nowPos = {}
+  // nowPos.sun = sunCalc.getPosition(now, lat, lon);
+  // nowPos.moon = sunCalc.getMoonPosition(now, lat, lon);
+  // nowPos.moonPhase = sunCalc.getMoonIllumination(now);
 
   //get current part of the day (sunrise, sunset, night, etc.)
-  var timeOfDay = sunCalc.times.sort(function(a,b) { return (a[0]>b[0])} )
-  console.log(sunCalc.times)
-  console.log(nowPos.sun.altitude*180/Math.PI);
-  // var x = timeOfDay.reduce(function(prev, cur, i, array) {
+  // var timeOfDay = sunCalc.times.sort(function(a,b) { return (a[0]>b[0])} )
+  // console.log(sunCalc.times)
+  // console.log(nowPos.sun.altitude*180/Math.PI);
+  // // var x = timeOfDay.reduce(function(prev, cur, i, array) {
+  // //   var ascending = (sunCalc.getTimes(now, lat, lon).solarNoon.getTime() > now.getTime()) ? 1 : 2
+  // //   return ( nowPos.sun.altitude > (cur[0]*Math.PI/180) ? cur[ascending] : prev)
+  // // }, "night")
+  // // console.log(x);
+  // nowPos.partOfDay = timeOfDay.reduce(function(prev, cur, i, array) {
   //   var ascending = (sunCalc.getTimes(now, lat, lon).solarNoon.getTime() > now.getTime()) ? 1 : 2
   //   return ( nowPos.sun.altitude > (cur[0]*Math.PI/180) ? cur[ascending] : prev)
   // }, "night")
-  // console.log(x);
-  nowPos.partOfDay = timeOfDay.reduce(function(prev, cur, i, array) {
-    var ascending = (sunCalc.getTimes(now, lat, lon).solarNoon.getTime() > now.getTime()) ? 1 : 2
-    return ( nowPos.sun.altitude > (cur[0]*Math.PI/180) ? cur[ascending] : prev)
-  }, "night")
-  res.json(nowPos);
+  // res.json(nowPos);
+  res.json(spitOutPos(now, lat, lon));
 
   next();
 })
@@ -56,18 +87,19 @@ function listTimes(interval, rise, set) {
 }
 
 
-// respond with "hello world" when a GET request is made to the homepage
+//get a day's worth of positions for sun and moon
 router.get('/positions', function(req, res, next) {
   var lat = req.query.lat || 40.6816778; //NYC
   var lon = req.query.lon || -73.9962808; //NYC
+  var now = (req.query.timestamp) ? new Date(req.query.timestamp) : new Date()
 
 
 
-  var now = new Date()
-  now.setHours(req.query.hours%24, req.query.hours)
-  var today = new Date()
-  today.setHours(0,0,0,0)
-  var tomorrow = new Date();
+  // var now = new Date()
+  // now.setHours(req.query.hours%24, req.query.hours)
+  var today = now;
+  today.setHours(0,0,0,0);
+  var tomorrow = now;
   tomorrow.setHours(23,45);
   // console.log(today);
   // console.log(tomorrow);
@@ -86,27 +118,6 @@ router.get('/positions', function(req, res, next) {
 
   var allDayTimes = listTimes(15, today, tomorrow)
 
-  // var daylightTimes = listTimes(15, sunTimes.sunrise, sunTimes.sunset) //array of times to get positions for
-  //
-  // // var moonlightTimes = []; //empty array of moon points
-  // var moonlightTimes = listTimes(moonTimes.rise || today, moonTimes.set || tomorrow);
-  //
-  // if (!moonTimes.alwaysDown) {
-  //   if(!moonTimes.alwaysUp) {
-  //     console.log("rise/set");
-  //     console.log(moonTimes);
-  //     moonlightTimes = listTimes(15, moonTimes.rise, moonTimes.set);
-  //     console.log("rise and set");
-  //     console.log(moonlightTimes);
-  //   } else {
-  //     console.log("always up");
-  //
-  //     //if moon doesn't set get all 24 hours worth
-  //     moonlightTimes = listTimes(15, now, new Date(now.getTime() + (24 * 60 * 60 * 1000)));
-  //   }
-  // } else {
-  //   console.log("always down");
-  // }
 
   console.log(allDayTimes);
 
@@ -134,6 +145,12 @@ router.get('/weekly', function(req, res) {
     for (var i=0; i < lightIntervals; i++) {
       var dateTime = new Date(rise.getTime() + (i * deltaT))
       times.push(dateTime)
+
+      var add = function(new, array) {
+        return array.push(new)
+      }
+
+
     }
 
     return times;
