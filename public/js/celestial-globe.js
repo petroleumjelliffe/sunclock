@@ -38,7 +38,11 @@ var CelestialGlobe= function(spec, onComplete) {
         callback();
     })
   }
-  getArcs(getPos(onComplete));
+  getArcs(function() {
+    getPos(onComplete)
+  });
+
+
 
 
 
@@ -339,39 +343,11 @@ var CelestialGlobe= function(spec, onComplete) {
     // drawDisc(xyTop, data.moon, "#ccc", topCanvas[0])
   }
 
-  that.updateArcs = function(callback) {
-    $.getJSON("/sunmoon/positions", {
-      "lat":spec.lat,
-      "lon":spec.lon, //NYC
-      "timestamp": spec.timestamp.toJSON()},
-      function(newArcPoints) {
-        spec.arcPoints = newArcPoints;
-
-      callback();
-    })
-  }
-
-  that.updatePosition = function(callback) {
-
-    $.getJSON("/sunmoon/now", {
-      "lat":spec.lat,
-      "lon":spec.lon, //NYC
-      "timestamp": spec.timestamp.toJSON()},
-      function(newPosition) {
-        spec.position = newPosition;
-
-      callback();
-    })
-  }
-
   that.getPartOfDay = function() {
     return spec.position.partOfDay;
   }
 
-  that.setDate = function(string) {
-    spec.timestamp = new Date(string)
-  }
-
+  //UPDATE FUNCTIONS
   that.updateDay = function(timestamp, callback) {
     var newDate = new Date(timestamp);
 

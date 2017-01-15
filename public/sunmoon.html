@@ -52,37 +52,13 @@
 
   var options = {}
   var globe = new CelestialGlobe(options, function() {
-    console.log("on complete constructor load");
     globe.sideView(sideCtx, dAz);
     globe.globeView(globeCtx, dAz);
     globe.topView(topCtx, dAz);
-    console.log("on finish showing views");
 
     sideCanvas.attr("class", globe.getPartOfDay());
     globeCanvas.attr("class", globe.getPartOfDay());
-
-
   });
-
-
-  // globe.updatePosition(function() {
-  //   console.log("position updated!");
-  //
-  //   globe.updateArcs(function() {
-  //     console.log("arcs updated!");
-  //     // console.log("spec is "+spec);
-  //
-      // globe.sideView(sideCtx, 0);
-      // globe.globeView(globeCtx, 0);
-      // globe.topView(topCtx, 0);
-  //
-  //     sideCanvas.attr("class", globe.getPartOfDay());
-  //     globeCanvas.attr("class", globe.getPartOfDay());
-  //
-  //
-  //   });
-  // });
-
 
   //attach the on change callback functions here so they have access to the data points.
   $("#azimuth").on("input", function() {
@@ -116,13 +92,26 @@
 
   $("#date-picker").datepicker({
     dateFormat:"yy-mm-dd",
-    nextText: ">"});
-
-  $("#date-picker").on("change", function() {
+    nextText: ">"})
+    .val(function() {
+      var now = new Date()
+      return now.toISOString()
+    })
+    .on("change", function() {
     globe.updateDay(this.value, function() {
       globe.sideView(sideCtx, dAz);
       globe.globeView(globeCtx, dAz);
       globe.topView(topCtx, dAz);
+
+      sideCanvas.attr("class", globe.getPartOfDay());
+      globeCanvas.attr("class", globe.getPartOfDay());
+
+
+      $("#time-of-day").val(function() {
+          var now = new Date(globe.getTime())
+          return now.getHours()+now.getMinutes()/60
+
+      })
 
     });
 
