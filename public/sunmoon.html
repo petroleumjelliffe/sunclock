@@ -24,7 +24,7 @@
       <input id="date-picker" type="" />
 
       <label for="time">Time of day</label>
-      <input id="time_of_day" name="time" type="range" min="0" max="24" step=".25">
+      <input id="time-of-day" name="time" type="range" min="0" max="24" step=".25">
 
       <label for="angle">Angle</label>
       <input id="azimuth" name="angle" type="range" min="-1" max="1" step=".125">
@@ -48,28 +48,40 @@
   var globeCanvas = $("#globeCanvas");
   var globeCtx = globeCanvas[0].getContext("2d");
 
-  var options = {}
-  var globe = new CelestialGlobe(options);
-
   var dAz = 0;
 
-  globe.updatePosition(function() {
-    console.log("position updated!");
+  var options = {}
+  var globe = new CelestialGlobe(options, function() {
+    console.log("on complete constructor load");
+    globe.sideView(sideCtx, dAz);
+    globe.globeView(globeCtx, dAz);
+    globe.topView(topCtx, dAz);
+    console.log("on finish showing views");
 
-    globe.updateArcs(function() {
-      console.log("arcs updated!");
-      // console.log("spec is "+spec);
-
-      globe.sideView(sideCtx, 0);
-      globe.globeView(globeCtx, 0);
-      globe.topView(topCtx, 0);
-
-      sideCanvas.attr("class", globe.getPartOfDay());
-      globeCanvas.attr("class", globe.getPartOfDay());
+    sideCanvas.attr("class", globe.getPartOfDay());
+    globeCanvas.attr("class", globe.getPartOfDay());
 
 
-    });
   });
+
+
+  // globe.updatePosition(function() {
+  //   console.log("position updated!");
+  //
+  //   globe.updateArcs(function() {
+  //     console.log("arcs updated!");
+  //     // console.log("spec is "+spec);
+  //
+      // globe.sideView(sideCtx, 0);
+      // globe.globeView(globeCtx, 0);
+      // globe.topView(topCtx, 0);
+  //
+  //     sideCanvas.attr("class", globe.getPartOfDay());
+  //     globeCanvas.attr("class", globe.getPartOfDay());
+  //
+  //
+  //   });
+  // });
 
 
   //attach the on change callback functions here so they have access to the data points.
@@ -82,24 +94,24 @@
     globe.topView(topCtx, dAz);
   })
 
+  $("#time-of-day").val(function() {
+    var now = new Date()
+    return now.getHours()+now.getMinutes()/60
+  })
   //changing time requires a JSON call, so should only be triggered on change
-  $("#time_of_day").on("change", function() {
+  $("#time-of-day").on("change", function() {
     console.log(this.value);
 
     // timestamp = new Date();
-    globe.setTime(this.value, this.value%1*60);
-    console.log(globe.getTime());
-
-    //updatePosition needs to take a time parameter to request a time not now
-    globe.updatePosition(function() {
+    globe.updateTime(this.value, this.value%1*60, function() {
       globe.sideView(sideCtx, dAz);
       globe.globeView(globeCtx, dAz);
       globe.topView(topCtx, dAz);
-    })
 
+      sideCanvas.attr("class", globe.getPartOfDay());
+      globeCanvas.attr("class", globe.getPartOfDay());
+    });
 
-    sideCanvas.attr("class", globe.getPartOfDay());
-    globeCanvas.attr("class", globe.getPartOfDay());
   })
 
   $("#date-picker").datepicker({
@@ -107,13 +119,13 @@
     nextText: ">"});
 
   $("#date-picker").on("change", function() {
-    globe.setDate(this.value);
-
-    globe.updatePosition(function() {
+    globe.updateDay(this.value, function() {
       globe.sideView(sideCtx, dAz);
       globe.globeView(globeCtx, dAz);
       globe.topView(topCtx, dAz);
-    })
+
+    });
+
   })
 
 
