@@ -89,6 +89,21 @@ router.get('/day', function(req, res, next) {
 
 })
 
+router.get('/analemma', function(req, res, next) {
+  var lat = req.query.lat || 40.6816778; //NYC
+  var lon = req.query.lon || -73.9962808; //NYC
+  var now = (req.query.timestamp) ? new Date(req.query.timestamp) : new Date()
+
+  var arc = []
+  for (var i=0; i<13; i++) {
+    var date = new Date(now.getFullYear(),now.getMonth+i, now.getDay(),17,0,0)
+    arc.push(sunCalc.getPosition(date, lat, lon))
+
+  }
+  res.json(arc)
+})
+
+
 
 // respond with "hello world" when a GET request is made to the homepage
 router.get('/now', function(req, res, next) {
@@ -190,6 +205,8 @@ router.get('/positions', function(req, res, next) {
 
   next();
 });
+
+
 
 
 router.get('/weekly', function(req, res) {

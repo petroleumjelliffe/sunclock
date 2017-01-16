@@ -7,20 +7,21 @@ var CelestialGlobe= function(spec, onComplete) {
   spec.lon = spec.lon||-73.9962808, //NYC
   spec.timestamp = spec.timestamp||new Date();
 
-
-  spec.arcPoints = spec.arcPoints||{};
+  // spec.arcPoints = spec.arcPoints||{};
   spec.moonArc = spec.moonArc||[];
   spec.sunArc = spec.sunArc||[];
+  spec.analemma = spec.analemma||[];
+
   spec.position = spec.position||{}; // sun and moon right now
   console.log(spec.timestamp.toString());
 
-  //initialize position, and the sun and moon arcs
+  //set positions and arcs
   var getPos = function(callback) {
     $.getJSON("sunmoon/position", spec, function(newPos) {
       spec.position = newPos
       console.log("updated position");
 
-      callback();
+      callback(newPos);
     })
   }
   var getArcs = function(callback) {
@@ -38,9 +39,25 @@ var CelestialGlobe= function(spec, onComplete) {
         callback();
     })
   }
+
+  //initialize
   getArcs(function() {
     getPos(onComplete)
+    getAnalemma(function(){return})
   });
+
+  //set sunarc to same day of every month
+  var getAnalemma = function(callback) {
+
+    //get a point for each day at the same time.
+    $.getJSON("sunmoon/analemma", spec,
+      function(newArc) {
+        spec.analemma = newArc
+        console.log("spec.analemma");
+        console.log(spec.analemma);
+        callback()
+      })
+    }
 
 
 
@@ -199,7 +216,7 @@ var CelestialGlobe= function(spec, onComplete) {
     var c={}
     c.width = ctx.canvas.width;
     c.height = ctx.canvas.height;
-    console.log("points");
+    console.log("points:");
     console.log(points);
     ctx.save();
     ctx.beginPath();
@@ -207,7 +224,6 @@ var CelestialGlobe= function(spec, onComplete) {
       if (p1!== null && i>0) {
         var xy1 = func(p1, c, dAz)
         ctx.moveTo(xy1.x,xy1.y);
-        console.log(xy1);
         var xy2 = func(p2, c, dAz)
         ctx.lineTo(xy2.x,xy2.y);
         ctx.stroke();
@@ -256,6 +272,8 @@ var CelestialGlobe= function(spec, onComplete) {
     console.log("spec.arcPoints:");
     console.log(spec.arcPoints);
     //draw paths above horizon
+    drawArc(xySide, spec.analemma, ctx, dAz);
+
     drawArc(xySide, spec.sunArc, ctx, dAz);
     drawArc(xySide, spec.moonArc, ctx, dAz);
 
@@ -343,6 +361,14 @@ var CelestialGlobe= function(spec, onComplete) {
     // drawDisc(xyTop, data.moon, "#ccc", topCanvas[0])
   }
 
+  // that.arbitraryView = function(ctx, dAz) {
+  //   var c={}
+  //   c.width = ctx.canvas.width;
+  //   c.height = ctx.canvas.height;
+  //   ctx.clearRect(0,0,c.width, c.height)
+  //
+  //
+  // }
   that.getPartOfDay = function() {
     return spec.position.partOfDay;
   }
