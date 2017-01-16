@@ -95,10 +95,17 @@ router.get('/analemma', function(req, res, next) {
   var now = (req.query.timestamp) ? new Date(req.query.timestamp) : new Date()
 
   var arc = []
-  for (var i=0; i<13; i++) {
-    var date = new Date(now.getFullYear(),now.getMonth+i, now.getDay(),17,0,0)
-    arc.push(sunCalc.getPosition(date, lat, lon))
+  var offset = now.getTimezoneOffset()
 
+  console.log("analemma:");
+  for (var i=0; i<36; i++) {
+    var date = new Date(now.getFullYear(),now.getMonth(), now.getDay(),12+i*10*24,0,0)
+    var delta = offset - date.getTimezoneOffset()
+    date.setMinutes(date.getMinutes() +delta)
+
+    console.log(date);
+    arc.push(sunCalc.getPosition(date, lat, lon))
+    console.log(sunCalc.getPosition(date, lat, lon));
   }
   res.json(arc)
 })
