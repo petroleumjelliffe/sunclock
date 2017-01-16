@@ -19,8 +19,8 @@ var spitOutPos = function(now, times, sorted, lat, lon) {
   moonPos.fraction = moonPhase.fraction;
 
   var partOfDay = sorted.reduce(function(min, cur, i, array) {
-    console.log(now.toISOString() +"<"+ times[cur].toISOString());
-    console.log(now.toISOString() < times[cur].toISOString() ? min : cur);
+    // console.log(now.toISOString() +"<"+ times[cur].toISOString());
+    // console.log(now.toISOString() < times[cur].toISOString() ? min : cur);
     return (now.toISOString() < times[cur].toISOString()) ? min : cur
   }, sorted[sorted.length-1]);
 
@@ -42,7 +42,7 @@ router.get('/position', function(req, res, next) {
 
   var times = sunCalc.getTimes(now, lat, lon);
   var sorted = Object.keys(times).sort(function(a,b) {
-    console.log(times[a]>times[b]);
+    // console.log(times[a]>times[b]);
     return times[a] - times[b]
   })
 
@@ -73,7 +73,7 @@ router.get('/day', function(req, res, next) {
 
   var times = sunCalc.getTimes(today, lat, lon);
   var sorted = Object.keys(times).sort(function(a,b) {
-    console.log(times[a]>times[b]);
+    // console.log(times[a]>times[b]);
     return times[a] - times[b]
   })
 
@@ -99,7 +99,7 @@ router.get('/analemma', function(req, res, next) {
 
   console.log("analemma:");
   for (var i=0; i<36; i++) {
-    var date = new Date(now.getFullYear(),now.getMonth(), now.getDay(),12+i*10*24,0,0)
+    var date = new Date(now.getFullYear(),now.getMonth(), now.getDay(), now.getHours() + i*10*24,0,0)
     var delta = offset - date.getTimezoneOffset()
     date.setMinutes(date.getMinutes() +delta)
 
@@ -126,8 +126,8 @@ router.get('/now', function(req, res, next) {
 
   // get current part of the day (sunrise, sunset, night, etc.)
   var timeOfDay = sunCalc.times.sort(function(a,b) { return (a[0]>b[0])} )
-  console.log(sunCalc.times)
-  console.log(nowPos.sun.altitude*180/Math.PI);
+  // console.log(sunCalc.times)
+  // console.log(nowPos.sun.altitude*180/Math.PI);
 
   nowPos.partOfDay = timeOfDay.reduce(function(prev, cur, i, array) {
     var ascending = (sunCalc.getTimes(now, lat, lon).solarNoon.getTime() > now.getTime()) ? 1 : 2

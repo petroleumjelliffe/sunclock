@@ -83,7 +83,7 @@
     // timestamp = new Date();
     globe.updateTime(this.value, this.value%1*60, function(position) {
       if ($("#lock")[0].checked ) {
-        dAz = Math.PI/2 - position.sun.azimuth
+        dAz =  - position.sun.azimuth
       }
       globe.sideView(sideCtx, dAz);
       globe.globeView(globeCtx, dAz);

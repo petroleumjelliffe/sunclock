@@ -118,9 +118,9 @@ var CelestialGlobe= function(spec, onComplete) {
   }
 
   //DRAWING PRIMITIVES
-  var drawDisc = function(func, sun, color, ctx, dAz) {
+  var drawDisc = function(func, sun, color, ctx, dAz, r) {
     var p = func(sun, ctx.canvas, dAz)
-    var r = ctx.canvas.height/10
+    var r =r|| ctx.canvas.height/10
 
     ctx.save();
     ctx.fillStyle = color;
@@ -265,7 +265,7 @@ var CelestialGlobe= function(spec, onComplete) {
     drawDisc(xySide, spec.position.sun, "#fdb813", ctx, dAz);
   }
 
-  that.globeView = function(ctx, /*arcPoints, position,*/ dAz) {
+  that.globeView = function(ctx, dAz) {
     var hideFrontHalf = function(item) {
       console.log(item.azimuth);
       var angle = item.azimuth+dAz
@@ -309,6 +309,11 @@ var CelestialGlobe= function(spec, onComplete) {
     // drawArc(halfGlobe, moonArc, ctx, dAz);
     drawArc(halfGlobe, spec.sunArc, ctx, dAz);
     drawArc(halfGlobe, spec.moonArc, ctx, dAz);
+    // drawArc(halfGlobe, spec.analemma, ctx, dAz);
+
+    spec.analemma.map(function(item){
+      drawDisc(halfGlobe, item, "#fff", ctx, dAz, 5)
+    })
 
     drawMoon(halfGlobe, spec.position.moon, "img/phases-sheet.png", ctx, dAz)
     drawDisc(halfGlobe, spec.position.sun, "#fdb813", ctx, dAz);
@@ -332,6 +337,7 @@ var CelestialGlobe= function(spec, onComplete) {
 
     drawArc(xyTop, spec.sunArc, ctx, dAz);
     drawArc(xyTop, spec.moonArc, ctx, dAz);
+    drawArc(xyTop, spec.analemma, ctx, dAz);
 
     drawShadow(spec.position.sun,"img/shadow.png", ctx, topCanvas[0], dAz)
 
@@ -350,7 +356,10 @@ var CelestialGlobe= function(spec, onComplete) {
     if (newDate.toDateString() !== spec.timestamp.toDateString()) {
       spec.timestamp = new Date(timestamp);
 
-      getArcs(getPos(callback))
+      getArcs(function() {
+        getPos(callback)
+        getAnalemma(callback)
+      })
     }
   }
 
@@ -358,6 +367,7 @@ var CelestialGlobe= function(spec, onComplete) {
     spec.timestamp.setHours(hours, minutes)
 
     getPos(callback)
+    getAnalemma(callback)
 
   }
 
