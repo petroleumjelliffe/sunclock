@@ -10,7 +10,7 @@
   "dependencies": {
     "express": "^4.13.4",
     "forecast.io": "0.0.9",
-    "suncalc": "mourner/suncalc"
+    "suncalc": "^1.8.0"
   },
   "devDependencies": {},
   "scripts": {
