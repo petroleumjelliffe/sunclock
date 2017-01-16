@@ -17,7 +17,11 @@ var CelestialGlobe= function(spec, onComplete) {
 
   //set positions and arcs
   var getPos = function(callback) {
-    $.getJSON("sunmoon/position", spec, function(newPos) {
+    $.getJSON("sunmoon/position", {
+    lat: spec.lat,
+    lon:spec.lon,
+    timestamp: spec.timestamp},
+    function(newPos) {
       spec.position = newPos
       console.log("updated position");
 
@@ -25,7 +29,11 @@ var CelestialGlobe= function(spec, onComplete) {
     })
   }
   var getArcs = function(callback) {
-    $.getJSON("sunmoon/day", spec, function(data) {
+    $.getJSON("sunmoon/day", {
+      lat: spec.lat,
+      lon:spec.lon,
+      timestamp: spec.timestamp},
+      function(data) {
         spec.moonArc = data.map(function(item) {
           return item.moon
         })
@@ -50,7 +58,10 @@ var CelestialGlobe= function(spec, onComplete) {
   var getAnalemma = function(callback) {
 
     //get a point for each day at the same time.
-    $.getJSON("sunmoon/analemma", spec,
+    $.getJSON("sunmoon/analemma", {
+      lat: spec.lat,
+      lon:spec.lon,
+      timestamp: spec.timestamp},
       function(newArc) {
         spec.analemma = newArc
         console.log("spec.analemma");
