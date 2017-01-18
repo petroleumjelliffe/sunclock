@@ -52,14 +52,34 @@
   var dAz = 0;
 
   var options = {}
-  var globe = new CelestialGlobe(options, function() {
+  var updateViews = function(position) {
+
+    if ($("#lock")[0].checked ) {
+      dAz = - position.sun.azimuth
+    }
+
+    //draw all views
     globe.sideView(sideCtx, dAz);
     globe.globeView(globeCtx, dAz);
     globe.topView(topCtx, dAz);
 
+    //set background colors
     sideCanvas.attr("class", globe.getPartOfDay());
     globeCanvas.attr("class", globe.getPartOfDay());
-  });
+
+    //set controls to match server response
+    $("#time-of-day").val(function() {
+      var now = new Date(position.timestamp)
+      // console.log(now);
+      return now.getHours()+now.getMinutes()/60
+    })
+
+    $("#azimuth").val(function() {
+      return dAz/Math.PI
+    })
+  }
+
+  var globe = new CelestialGlobe(options, updateViews);
 
   //attach the on change callback functions here so they have access to the data points.
   $("#azimuth").on("input", function() {
@@ -71,27 +91,13 @@
     globe.topView(topCtx, dAz);
   })
 
-  $("#time-of-day").val(function() {
-    var now = new Date()
-    return now.getHours()+now.getMinutes()/60
-  })
 
   //changing time requires a JSON call, so should only be triggered on change
   $("#time-of-day").on("change", function() {
     console.log(this.value);
 
     // timestamp = new Date();
-    globe.updateTime(this.value, this.value%1*60, function(position) {
-      if ($("#lock")[0].checked ) {
-        dAz =  - position.sun.azimuth
-      }
-      globe.sideView(sideCtx, dAz);
-      globe.globeView(globeCtx, dAz);
-      globe.topView(topCtx, dAz);
-
-      sideCanvas.attr("class", globe.getPartOfDay());
-      globeCanvas.attr("class", globe.getPartOfDay());
-    });
+    globe.updateTime(this.value, this.value%1*60, updateViews);
 
   })
 
@@ -103,21 +109,7 @@
       return now.toISOString()
     })
     .on("change", function() {
-    globe.updateDay(this.value, function(position) {
-      globe.sideView(sideCtx, dAz);
-      globe.globeView(globeCtx, dAz);
-      globe.topView(topCtx, dAz);
-
-      sideCanvas.attr("class", globe.getPartOfDay());
-      globeCanvas.attr("class", globe.getPartOfDay());
-
-
-      $("#time-of-day").val(function() {
-        var now = new Date(globe.getTime())
-        return now.getHours()+now.getMinutes()/60
-      })
-
-    });
+    globe.updateDay(this.value, updateViews);
 
   })
 

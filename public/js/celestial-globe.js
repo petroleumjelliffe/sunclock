@@ -222,11 +222,12 @@ var CelestialGlobe= function(spec, onComplete) {
         ctx.moveTo(xy1.x,xy1.y);
         var xy2 = func(p2, c, dAz)
         ctx.lineTo(xy2.x,xy2.y);
-        ctx.stroke();
       }
 
       return p2;
     }, {} );
+    ctx.stroke();
+
     ctx.closePath();
     ctx.restore();
   }
@@ -329,7 +330,13 @@ var CelestialGlobe= function(spec, onComplete) {
     drawMoon(halfGlobe, spec.position.moon, "img/phases-sheet.png", ctx, dAz)
     drawDisc(halfGlobe, spec.position.sun, "#fdb813", ctx, dAz);
 
+
+    ctx.globalCompositeOperation = 'destination-in'
+    ctx.arc(c.width/2,c.height,c.width/2,0,2*Math.PI);
+    ctx.fill()
     ctx.restore();
+
+
   }
 
   that.topView = function(ctx, /*arcPoints, position,*/ dAz) {
