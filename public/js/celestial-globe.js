@@ -246,6 +246,7 @@ var CelestialGlobe= function(spec, onComplete) {
     var c={}
     c.width = ctx.canvas.width;
     c.height = ctx.canvas.height;
+
     ctx.clearRect(0,0,c.width, c.height)
 
     ctx.lineWidth = 0.25;
@@ -282,6 +283,7 @@ var CelestialGlobe= function(spec, onComplete) {
     console.log(spec.position);
     drawMoon(xySide, spec.position.moon, "img/phases-sheet.png", ctx, dAz)
     drawDisc(xySide, spec.position.sun, "#fdb813", ctx, dAz);
+    ctx.restore()
   }
 
   that.globeView = function(ctx, dAz) {
@@ -294,6 +296,7 @@ var CelestialGlobe= function(spec, onComplete) {
     var c={}
     c.width = ctx.canvas.width;
     c.height = ctx.canvas.height;
+
     ctx.clearRect(0,0,c.width, c.height)
 
     // ctx.save();
@@ -386,18 +389,33 @@ var CelestialGlobe= function(spec, onComplete) {
     if (newDate.toDateString() !== spec.timestamp.toDateString()) {
       spec.timestamp = new Date(timestamp);
 
-      getArcs(function() {
-        getPos(callback)
-        getAnalemma(callback)
+      // getArcs(function() {
+      //   getPos(callback)
+      //   getAnalemma(callback)
+      // })
+
+      getArcs(function(newPos) {
+        getAnalemma(function(newPos) {
+          getPos(function(newPos) {
+            callback(newPos)
+          })
+        })
       })
+
     }
   }
 
   that.updateTime = function(hours, minutes, callback) {
     spec.timestamp.setHours(hours, minutes)
 
-    getPos(callback)
-    getAnalemma(callback)
+    // getPos(callback)
+    // getAnalemma(callback)
+    var newPos = spec.position
+      getAnalemma(function(newPos) {
+        getPos(function(newPos) {
+          callback(newPos)
+        })
+      })
 
   }
 
