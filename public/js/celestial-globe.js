@@ -44,15 +44,11 @@ var CelestialGlobe= function(spec, onComplete) {
         console.log("updated arcs");
         console.log(spec.sunArc);
 
-        callback();
+        callback(spec.position);
     })
   }
 
-  //initialize
-  getArcs(function() {
-    getPos(onComplete)
-    getAnalemma(function(){return})
-  });
+
 
   //set sunarc to same day of every month
   var getAnalemma = function(callback) {
@@ -66,10 +62,20 @@ var CelestialGlobe= function(spec, onComplete) {
         spec.analemma = newArc
         console.log("spec.analemma");
         console.log(spec.analemma);
-        callback()
+
+        callback(spec.position)
       }
     )
   }
+
+  //initialize
+  getArcs(function(newPos) {
+    getAnalemma(function(newPos) {
+      getPos(function(newPos) {
+        onComplete(newPos)
+      })
+    })
+  });
 
   var that={};
 
@@ -214,6 +220,7 @@ var CelestialGlobe= function(spec, onComplete) {
     c.height = ctx.canvas.height;
     console.log("points:");
     console.log(points);
+
     ctx.save();
     ctx.beginPath();
     points.reduce(function(p1, p2, i, array) {
@@ -284,11 +291,12 @@ var CelestialGlobe= function(spec, onComplete) {
       return angle > -Math.PI/2 && angle < Math.PI/2
     }
 
-    ctx.save();
     var c={}
     c.width = ctx.canvas.width;
     c.height = ctx.canvas.height;
     ctx.clearRect(0,0,c.width, c.height)
+
+    // ctx.save();
 
     var y = Math.PI/2;
 
@@ -313,6 +321,7 @@ var CelestialGlobe= function(spec, onComplete) {
     ctx.beginPath();
     ctx.arc(c.width/2,c.height,c.width/2,0,2*Math.PI);
     ctx.stroke();
+    // ctx.closePath()
 
     //filter out points that are "in front" of the screen 90º-270º
     // var sunArc = spec.sunArc.filter(hideFrontHalf)
@@ -330,9 +339,12 @@ var CelestialGlobe= function(spec, onComplete) {
     drawMoon(halfGlobe, spec.position.moon, "img/phases-sheet.png", ctx, dAz)
     drawDisc(halfGlobe, spec.position.sun, "#fdb813", ctx, dAz);
 
-
+    //mask out everything outside the globe
+    ctx.save()
     ctx.globalCompositeOperation = 'destination-in'
+    ctx.beginPath();
     ctx.arc(c.width/2,c.height,c.width/2,0,2*Math.PI);
+    // ctx.closePath()
     ctx.fill()
     ctx.restore();
 
