@@ -11,7 +11,9 @@
 
 <body>
   <div>
-    <canvas id="topCanvas" width="144" height="168" style="border:1px solid #d3d3d3;"></canvas>
+    <canvas id="topCanvas" width="144" height="90" style="border:1px solid #d3d3d3; position:absolute; left:176px; top: 166px;  "></canvas>
+    <canvas id="clock" height="500" width="500"></canvas>
+
   </div>
 
   <div id="globeContainer">
@@ -28,7 +30,7 @@
 
       <label for="angle">Angle</label>
       <input id="azimuth" name="angle" type="range" min="-1" max="1" step=".125">
-      <input id="lock" type="checkbox">
+      <input id="lock" type="checkbox" checked="checked">
 
     </form>
 
@@ -60,12 +62,13 @@
 
     //draw all views
     globe.sideView(sideCtx, dAz);
-    globe.globeView(globeCtx, dAz);
-    globe.topView(topCtx, dAz);
+    globe.globeView(topCtx, dAz);
+    // globe.topView(topCtx, dAz);
 
     //set background colors
     sideCanvas.attr("class", globe.getPartOfDay());
     globeCanvas.attr("class", globe.getPartOfDay());
+    topCanvas.attr("class", globe.getPartOfDay());
 
     //set controls to match server response
     $("#time-of-day").val(function() {
@@ -114,6 +117,92 @@
   })
 
 
+  </script>
+
+  <p id="updated-at">Updating...</p>
+
+  <h2>45th and 5th</h2>
+  <ul id="arrivals">
+    <li>No buses :(</li>
+  </ul>
+  <script src=" ./js/analog-clock.js"></script>
+
+  <script>
+    var clock = new AnalogClock($("#clock")[0], {
+      // buses: upcoming, //[1,2,3],  //upcoming array
+      clockWidth:450,
+      layout: function(canvas) {
+        //'this' is spec in the class
+        console.log(this.buses);
+
+        //draw a circle for each bus around the perimeter of the clock
+        var ctx = canvas.getContext("2d");
+        var centerX = canvas.width / 2;
+        var centerY = canvas.height / 2;
+        var r = this.clockWidth/2-14;
+
+        //draw circles for each upcoming bus
+        //center for each bus dot is: angle is minutes, radius is inside the minute hand length
+        this.buses.map(function(icon, index, array) {
+          //convert CW minutes into CCW radians
+          var minutes = new Date(icon.arrivalTime)
+          var angle = Math.PI/2 - (2 * minutes.getMinutes()/ 60 * Math.PI)
+
+          var x = centerX + Math.cos(angle)*r
+          var y = centerY - Math.sin(angle)*r  //flip upside down
+
+          console.log(angle + " " + minutes.getMinutes());
+          ctx.save()
+          ctx.beginPath()
+          ctx.arc(x, y, 10, 0, Math.PI * 2, false)
+          ctx.fillStyle = 'blue'
+          ctx.fill();
+          ctx.restore()
+        })
+      }
+    });
+    clock.begin();
+
+
+    $.getJSON("/clock/bustime", function(arrivals) {
+
+      var now = new Date();
+      $("#updated-at").html(now);
+
+      var timeToArrival = function() {
+        //return a function that compares given times with the time this function was created
+        return function(arrivalTime) {
+          var nownow = now.getTime()
+          var arr = new Date(arrivalTime)
+
+          return (arr.getTime() - nownow)/1000/60;
+        }
+      }();
+
+      var walkToStation = 0;
+
+      var upcoming = arrivals.filter(function(bus) {
+        //arrival time exists, greater than time to walk to station, and less than 1 hour
+        return (bus.arrivalTime !== null) && (timeToArrival(bus.arrivalTime) > (walkToStation * 60 * 1000)) && (timeToArrival(bus.arrivalTime)<60)
+      });
+
+      //create new clock
+      //tell it how to show the buses
+      clock.setBuses(upcoming);
+
+      //redraw once per second
+      // clock.tick();
+      // window.setInterval(clock.tick, 1000);
+
+
+      $("#arrivals").html(
+        // if (arrivals.length<0) {
+        upcoming.map(function (bus, index, array) {
+              return "<li>"+timeToArrival(bus.arrivalTime) + " minutes</li> ("+ bus.distances.PresentableDistance +")";
+        })
+        .join("\n"));
+
+    });
   </script>
 
 </body>

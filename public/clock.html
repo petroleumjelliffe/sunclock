@@ -1,0 +1,90 @@
+<html>
+<head>
+
+
+  <script   src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
+  <script   src="./js/analog-clock.js"   crossorigin="anonymous"></script>
+
+</head>
+
+<body>
+  <canvas id="clock" height="500" width="500"></canvas>
+
+
+  <p>Hello, world!</p>
+
+  <script>
+  var points =  [
+     {
+       "timestamp": "2015-01-17T16:00",
+       "label":"wedding anniversary"
+     }, {
+       "timestamp": "1983-07-08T12:00",
+       "label":"lauren birthday"
+     }, {
+       "timestamp": "1981-02-07T12:00",
+       "label":"pete birthday"
+
+     }]
+
+     var clock = new AnalogClock($("#clock")[0], {
+       // buses: upcoming, //[1,2,3],  //upcoming array
+       clockWidth:450,
+       layout: function(canvas) {
+         //'this' is spec in the class
+        //  console.log(this.buses);
+
+         //draw a circle for each bus around the perimeter of the clock
+         var ctx = canvas.getContext("2d");
+         var centerX = canvas.width / 2;
+         var centerY = canvas.height / 2;
+         var r = this.clockWidth/2+14;
+
+         //draw circles for each upcoming bus
+         //center for each bus dot is: angle is minutes, radius is inside the minute hand length
+         this.buses.map(function(icon, index, array) {
+           var msinayear = 1000*60*60*24*365.25
+           var delta = function(start, end) {
+             return (end.getTime()-start.getTime())/(msinayear)
+           }
+
+           //convert CW minutes into CCW radians
+           var start = new Date()
+          //  var midnight = new Date(start.getTime())
+          //  midnight.setHours(0)
+          //  var psi = delta(start, midnight)*2*Math.PI
+          //  ctx.arc(centerX,centerY, r+5, psi, psi+ 2* Math.PI/msinayear)
+          //  ctx.stroke()
+           start.setMonth(0,1 )
+
+           var day = new Date(icon.timestamp)
+           day.setFullYear(start.getFullYear())
+
+
+           var diff = delta(start, day)
+           var angle = Math.PI/2 - (diff * 2 * Math.PI)
+
+           var x = centerX + Math.cos(angle)*r
+           var y = centerY - Math.sin(angle)*r  //flip upside down
+
+          //  console.log(angle + " " + minutes.getMinutes());
+           ctx.save()
+           ctx.beginPath()
+           ctx.arc(x, y, (1-diff)*10, 0, Math.PI * 2, false)
+           ctx.fillStyle = 'green'
+           ctx.fill();
+           ctx.restore()
+         })
+       }
+     });
+     clock.begin();
+
+     clock.setBuses(points)
+    </script>
+
+</body>
+
+
+
+
+</html>
