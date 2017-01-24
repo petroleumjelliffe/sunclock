@@ -1,0 +1,277 @@
+<html>
+<head>
+
+
+  <script   src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
+  <script   src="./js/jquery-ui.min.js"   crossorigin="anonymous"></script>
+  <script   src="./js/celestial-globe.js"   crossorigin="anonymous"></script>
+  <link rel="stylesheet" type="text/css" href="./css/gradients.css"/>
+  <link rel="stylesheet" type="text/css" href="./css/jquery-ui.min.css"/>
+</head>
+
+<body>
+  <div>
+    <canvas id="topCanvas" width="144" height="90"></canvas>
+    <canvas id="clock" height="500" width="500"></canvas>
+
+  </div>
+
+  <div id="globeContainer">
+    <canvas id="globeCanvas" width="800" height="400" style="border:1px solid #d3d3d3;"></canvas>
+  </div>
+
+  <div>
+    <form id="controls">
+      <label for="date">Date</label>
+      <input id="date-picker" type="" />
+
+      <label for="time">Time of day</label>
+      <input id="time-of-day" name="time" type="range" min="0" max="24" step=".25">
+
+      <label for="angle">Angle</label>
+      <input id="azimuth" name="angle" type="range" min="-1" max="1" step=".125">
+      <input id="lock" type="checkbox" checked="checked">
+
+    </form>
+
+    <canvas id="myCanvas" width="1200" height="300" style=""></canvas>
+    <canvas id="spiral" width="500" height="500" style=""></canvas>
+  </div>
+  <!-- <canvas id="myCanvas" width="144" height="56" style="border:1px solid #d3d3d3;"></canvas> -->
+
+  <!-- <p style="background:#f00;"><img src="img/072075348d410a448a70855677fedfa1.jpg" height="800" width="400"/></p> -->
+
+  <script>
+  // var topCanvas = $("#topCanvas");
+  // var topCtx = topCanvas[0].getContext("2d");
+
+  var topCanvas = $("<canvas>");
+  topCanvas[0].height=500
+  topCanvas[0].width=500
+  console.log(topCanvas);
+  var topCtx = topCanvas[0].getContext("2d");
+
+  // var c = document.getElementById("myCanvas");
+  var sideCanvas = $("#myCanvas");
+  var sideCtx = sideCanvas[0].getContext("2d");
+
+  var globeCanvas = $("#globeCanvas");
+  var globeCtx = globeCanvas[0].getContext("2d");
+
+  var dAz = 0;
+
+  var options = {}
+  var updateViews = function(position) {
+
+    if ($("#lock")[0].checked ) {
+      dAz = - position.sun.azimuth
+    }
+
+    //draw all views
+    globe.sideView(sideCtx, dAz);
+    globe.globeView(topCtx, dAz);
+    // globe.topView(topCtx, dAz);
+
+    //set background colors
+    sideCanvas.attr("class", globe.getPartOfDay());
+    globeCanvas.attr("class", globe.getPartOfDay());
+    topCanvas.attr("class", globe.getPartOfDay());
+
+    //set controls to match server response
+    $("#time-of-day").val(function() {
+      var now = new Date(position.timestamp)
+      // console.log(now);
+      return now.getHours()+now.getMinutes()/60
+    })
+
+    $("#azimuth").val(function() {
+      return dAz/Math.PI
+    })
+
+
+    var spiralCanvas = document.getElementById("spiral")
+    var spiralCtx = spiralCanvas.getContext("2d")
+    globe.customArc(function(arc) {
+
+      var colors = {
+        "nauticalDawn" :"#020111",
+        "dawn" : "#40405c",
+        "sunrise"	:"#82addb",
+         "sunriseEnd": "#94c5f8" ,
+         "goldenHourEnd": "#b7eaff" ,
+       "solarNoon": "#9be2fe" ,
+        "goldenHour" : "#b7eaff",
+        "sunsetStart": "#2d91c2" ,
+       "sunset":"#154277" ,
+        "dusk" : "#071B26" ,
+       "nauticalDusk": "#010A10" ,
+       "night" :"#020111" ,
+       "nadir":"#020111" ,
+       "nightEnd": "#20202c"
+     }
+
+      spiralCtx.save()
+      var r1 = 150,
+          r2 = 35,
+          x1 = r1 * Math.cos(Math.PI/2-(hours) * 30*Math.PI/180),
+          y1 = -r1 * Math.sin(Math.PI/2-(hours) * 30*Math.PI/180)
+          // for(dt = 0; dt<96; dt++) {
+
+      arc.map(function(item){
+
+        x1 = (r1-r2*dt/24/4) * Math.cos(Math.PI/2-(hours+dt/4) * 30*Math.PI/180)
+        y1 = (r1-r2*dt/24/4) * Math.sin(Math.PI/2-(hours+dt/4) * 30*Math.PI/180)
+
+        // ctx.lineTo(ctx.canvas.width/2+x1,ctx.canvas.height/2+y1)
+        // ctx.beginPath()
+        //circles
+        // ctx.arc(ctx.canvas.width/2+x1, ctx.canvas.height/2-y1, (r1-r2*dt/24/4)*2*Math.PI/96, 0, Math.PI*2)
+        // ctx.fill()
+
+        //spiral - circular gradient showing the next 24 hours
+        spiralCtx.lineWidth = r2/2
+        // console.log("rgba("+Math.floor(dt/97*255)+",0,0,"+(1-dt/97)+")");
+        console.log(item);
+        spiralCtx.strokeStyle=colors[item.partOfDay]
+        spiralCtx.beginPath()
+        spiralCtx.arc(spiralCtx.canvas.width/2, spiralCtx.canvas.height/2, (r1-r2*dt/24/4), (30*(hours+dt/4-1/4)-90)*Math.PI/180, (30*(hours+dt/4+1/4)-90)*Math.PI/180)
+        spiralCtx.stroke()
+
+    })
+  })
+
+
+
+  }
+
+  var globe = new CelestialGlobe(options, updateViews);
+
+  //attach the on change callback functions here so they have access to the data points.
+  $("#azimuth").on("input", function() {
+    console.log(this.value);
+    dAz = this.value*Math.PI;
+
+    globe.sideView(sideCtx, dAz);
+    globe.globeView(globeCtx, dAz);
+    globe.topView(topCtx, dAz);
+  })
+
+
+  //changing time requires a JSON call, so should only be triggered on change
+  $("#time-of-day").on("change", function() {
+    console.log(this.value);
+
+    // timestamp = new Date();
+    globe.updateTime(this.value, this.value%1*60, updateViews);
+
+  })
+
+  $("#date-picker").datepicker({
+    dateFormat:"yy-mm-dd",
+    nextText: ">"})
+    .val(function() {
+      var now = new Date()
+      return now.toISOString()
+    })
+    .on("change", function() {
+    globe.updateDay(this.value, updateViews);
+
+  })
+
+
+  </script>
+
+  <p id="updated-at">Updating...</p>
+
+  <h2>45th and 5th</h2>
+  <ul id="arrivals">
+    <li>No buses :(</li>
+  </ul>
+  <script src=" ./js/analog-clock.js"></script>
+
+  <script>
+    var clock = new AnalogClock($("#clock")[0], {
+      // buses: upcoming, //[1,2,3],  //upcoming array
+      clockWidth:450,
+      layout: function(canvas) {
+        //'this' is spec in the class
+        console.log(this.buses);
+
+        //draw a circle for each bus around the perimeter of the clock
+        var ctx = canvas.getContext("2d");
+        var centerX = canvas.width / 2;
+        var centerY = canvas.height / 2;
+        var r = this.clockWidth/2-14;
+
+        //draw circles for each upcoming bus
+        //center for each bus dot is: angle is minutes, radius is inside the minute hand length
+        this.buses.map(function(icon, index, array) {
+          //convert CW minutes into CCW radians
+          var minutes = new Date(icon.arrivalTime)
+          var angle = Math.PI/2 - (2 * minutes.getMinutes()/ 60 * Math.PI)
+
+          var x = centerX + Math.cos(angle)*r
+          var y = centerY - Math.sin(angle)*r  //flip upside down
+
+          console.log(angle + " " + minutes.getMinutes());
+          ctx.save()
+          ctx.beginPath()
+          ctx.arc(x, y, 10, 0, Math.PI * 2, false)
+          ctx.fillStyle = 'blue'
+          ctx.fill();
+          ctx.restore()
+        })
+      }
+    });
+    clock.begin();
+
+
+    $.getJSON("/clock/bustime", function(arrivals) {
+
+      var now = new Date();
+      $("#updated-at").html(now);
+
+      var timeToArrival = function() {
+        //return a function that compares given times with the time this function was created
+        return function(arrivalTime) {
+          var nownow = now.getTime()
+          var arr = new Date(arrivalTime)
+
+          return (arr.getTime() - nownow)/1000/60;
+        }
+      }();
+
+      var walkToStation = 0;
+
+      var upcoming = arrivals.filter(function(bus) {
+        //arrival time exists, greater than time to walk to station, and less than 1 hour
+        return (bus.arrivalTime !== null) && (timeToArrival(bus.arrivalTime) > (walkToStation * 60 * 1000)) && (timeToArrival(bus.arrivalTime)<60)
+      });
+
+      //create new clock
+      //tell it how to show the buses
+      clock.setBuses(upcoming);
+
+      //redraw once per second
+      // clock.tick();
+      // window.setInterval(clock.tick, 1000);
+
+
+      $("#arrivals").html(
+        // if (arrivals.length<0) {
+        upcoming.map(function (bus, index, array) {
+              return "<li>"+timeToArrival(bus.arrivalTime) + " minutes</li> ("+ bus.distances.PresentableDistance +")";
+        })
+        .join("\n"));
+
+    });
+  </script>
+
+
+
+</body>
+
+
+
+
+</html>

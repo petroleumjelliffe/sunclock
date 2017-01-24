@@ -8,78 +8,99 @@
 </head>
 
 <body>
-  <canvas id="clock" height="500" width="500"></canvas>
+  <canvas id="spiral" width="500" height="500"></canvas>
 
 
   <p>Hello, world!</p>
 
   <script>
-  var points =  [
-     {
-       "timestamp": "2015-01-17T16:00",
-       "label":"wedding anniversary"
-     }, {
-       "timestamp": "1983-07-08T12:00",
-       "label":"lauren birthday"
-     }, {
-       "timestamp": "1981-02-07T12:00",
-       "label":"pete birthday"
 
-     }]
+    var canvas2 = document.getElementById("spiral")
+    var ctx2 = canvas2.getContext("2d")
 
-     var clock = new AnalogClock($("#clock")[0], {
-       // buses: upcoming, //[1,2,3],  //upcoming array
-       clockWidth:450,
-       layout: function(canvas) {
-         //'this' is spec in the class
-        //  console.log(this.buses);
+    var cSpiral = document.createElement("canvas")
+    cSpiral.width=500
+    cSpiral.height=500
+    var ctxSpiral = cSpiral.getContext("2d")
 
-         //draw a circle for each bus around the perimeter of the clock
-         var ctx = canvas.getContext("2d");
-         var centerX = canvas.width / 2;
-         var centerY = canvas.height / 2;
-         var r = this.clockWidth/2+14;
+    var drawDot = function(ctx, d, theta, phi) {
+      var r = d * Math.sin(theta)
+      ctx.save()
+      ctx.beginPath()
+      ctx.translate(ctx.canvas.width/2,ctx.canvas.height/2)
+      ctx.rotate(phi)
+      ctx.translate(0, -d)
 
-         //draw circles for each upcoming bus
-         //center for each bus dot is: angle is minutes, radius is inside the minute hand length
-         this.buses.map(function(icon, index, array) {
-           var msinayear = 1000*60*60*24*365.25
-           var delta = function(start, end) {
-             return (end.getTime()-start.getTime())/(msinayear)
-           }
+      ctx.arc(0,0, r, 0, 2*Math.PI)
+      ctx.fill()
+      ctx.restore()
+      console.log("d: "+d+", r: "+r)
+    }
 
-           //convert CW minutes into CCW radians
-           var start = new Date()
-          //  var midnight = new Date(start.getTime())
-          //  midnight.setHours(0)
-          //  var psi = delta(start, midnight)*2*Math.PI
-          //  ctx.arc(centerX,centerY, r+5, psi, psi+ 2* Math.PI/msinayear)
-          //  ctx.stroke()
-           start.setMonth(0,1 )
+    var draw = function(d1, i)  {
+      if (i>0) {
+        var theta = 2*Math.PI/60
+        var r1 = d1 * Math.sin(theta/2)
+        var d2 = d1 * (1+Math.sin(theta/2))/(1-Math.sin(theta/2))
+        var d3 = d2 * (1+Math.sin(theta/2))/(1-Math.sin(theta/2))
 
-           var day = new Date(icon.timestamp)
-           day.setFullYear(start.getFullYear())
+        ctxSpiral.fillStyle = (i == 1) ? "#333" : "#ccc"
+        drawDot(ctxSpiral, d1, theta/2, -i*theta)
+
+        ctxSpiral.fillStyle= "#ccc"
+        drawDot(ctxSpiral, d3, theta/2, -i*theta)
+        drawDot(ctxSpiral, d2, theta/2, -i*theta)
+
+        draw(d1-.35, i-1)
+      }
+    }
+
+    draw(200,60)
+
+    //mask the ring
+    ctxSpiral.beginPath()
+    ctxSpiral.globalCompositeOperation = "destination-in"
+    ctxSpiral.lineWidth = 250*Math.sin(Math.PI/30)*2
+    ctxSpiral.translate(cSpiral.width/2, cSpiral.height/2)
+    ctxSpiral.arc(0,0,190,0, 2*Math.PI)
+    ctxSpiral.stroke()
+
+    // ctx2.translate(ctx2.canvas.width/2, ctx2.canvas.height/2)
+    // ctx2.rotate(Math.PI/30*40)
+    // ctx2.translate(-ctx2.canvas.width/2, -ctx2.canvas.height/2)
+    // ctx2.drawImage(cSpiral,0,0)
+
+    var drawSpiral = function(timestamp) {
+      var now = new Date()
+      ctx2.clearRect(0,0,500,500)
+      ctx2.save()
+      ctx2.translate(ctx2.canvas.width/2, ctx2.canvas.height/2)
+      ctx2.rotate(Math.floor(now.getSeconds())*Math.PI/30)
+      ctx2.translate(-ctx2.canvas.width/2, -ctx2.canvas.height/2)
+      ctx2.drawImage(cSpiral,0,0)
+      ctx2.restore()
+
+      // ctx2.clearRect(0,0,500,500)
+      ctx2.save()
+      ctx2.translate(ctx2.canvas.width/2, ctx2.canvas.height/2)
+      ctx2.rotate(Math.floor(now.getMinutes())*Math.PI/30)
+      ctx2.translate(-ctx2.canvas.width/2, -ctx2.canvas.height/2)
+      ctx2.drawImage(cSpiral,0,0,500,500,100,100,300,300)
+      ctx2.restore()
 
 
-           var diff = delta(start, day)
-           var angle = Math.PI/2 - (diff * 2 * Math.PI)
 
-           var x = centerX + Math.cos(angle)*r
-           var y = centerY - Math.sin(angle)*r  //flip upside down
+      window.requestAnimationFrame(drawSpiral)
+    }
 
-          //  console.log(angle + " " + minutes.getMinutes());
-           ctx.save()
-           ctx.beginPath()
-           ctx.arc(x, y, (1-diff)*10, 0, Math.PI * 2, false)
-           ctx.fillStyle = 'green'
-           ctx.fill();
-           ctx.restore()
-         })
-       }
-     });
-     clock.begin();
+    window.requestAnimationFrame(drawSpiral)
 
-     clock.setBuses(points)
+
+
+
+
+
+
     </script>
 
 </body>

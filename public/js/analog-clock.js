@@ -11,15 +11,21 @@
 var AnalogClock = function(canvas, spec) {
   //spec is options sent to constructor
   spec.canvas = canvas;
+  // spec.canvas.height = spec.canvas.height*2
+  // spec.canvas.width = spec.canvas.width*2
+  // spec.canvas.style.height = spec.canvas.height/4
+  // spec.canvas.style.width = spec.canvas.width/4
+  // spec.ctx.scale(2,2)
+  spec.ctx = spec.canvas.getContext("2d")
 
   //appointments are items to show on the clock according to layout function
   spec.buses = spec.buses||[];
+
+  //create a canvas to draw the static clockface, which will be drawn into the new canvas
   var newCanvas = document.createElement("canvas")
   newCanvas.height = 500
   newCanvas.width = 500
-
   var ctxFace = newCanvas.getContext("2d")
-
 
   var drawStatic = function(ctx) {
     var centerX = spec.canvas.width / 2;
@@ -44,10 +50,10 @@ var AnalogClock = function(canvas, spec) {
 
     function drawNumbers() {
 
-      var i = 60;
+      var i = 0;
       ctx.strokeStyle = "black";
       ctx.lineWidth = 1;
-      while(i > 0) {
+      while(i < 60) {
         ctx.save();
         ctx.beginPath();
         ctx.translate(centerX, centerY);
@@ -74,7 +80,7 @@ var AnalogClock = function(canvas, spec) {
         ctx.stroke();
         // ctx.closePath();
         ctx.restore();
-        i --;
+        i++
       }
     }
 
@@ -100,16 +106,19 @@ var AnalogClock = function(canvas, spec) {
   }
 
   var drawHand = function(ctx, length, angle) {
-    var centerX = spec.canvas.width / 2;
-    var centerY = spec.canvas.height / 2;
+    var centerX = ctx.canvas.width / 2;
+    var centerY = ctx.canvas.height / 2;
 
     ctx.save();
     ctx.beginPath();
     ctx.translate(centerX, centerY);
     ctx.rotate(-180 * Math.PI/180); // Correct for top left origin
     ctx.rotate(angle * Math.PI/180);
+    // ctx.translate(0, 0-clockWidth/2);
+
     ctx.moveTo(0, 0);
     ctx.lineTo(0, length);
+
     ctx.stroke();
     ctx.closePath();
     ctx.restore();
@@ -127,9 +136,15 @@ var AnalogClock = function(canvas, spec) {
 		// drawStatic(ctx);
     ctx.drawImage(spec.face, 0, 0)
 
-    var seconds = (spec.date.getSeconds()+(deltaT/1000));
-    var minutes = (spec.date.getMinutes()+(seconds/60));
-		var hours = (spec.date.getHours()+(minutes/60));
+
+    //show today's date
+    var now = new Date()
+    // var seconds = (spec.date.getSeconds()+(deltaT/1000));
+    // var minutes = (spec.date.getMinutes()+(seconds/60));
+		// var hours = (spec.date.getHours()+(minutes/60));
+    var seconds = (now.getSeconds());
+    var minutes = (now.getMinutes()+(seconds/60));
+		var hours = (now.getHours()+(minutes/60));
 
 		ctx.strokeStyle = "black";
 		ctx.lineWidth = 4;
@@ -141,14 +156,56 @@ var AnalogClock = function(canvas, spec) {
 
 		ctx.strokeStyle = "red";
 		ctx.lineWidth = 1;
-    //make the second hand snap wiggle and forth
-    var wiggle = Math.floor(seconds)
-    var ms = 100 - (deltaT%1000)
-    // var dAngle = Math.cos(correction*Math.PI/18)*Math.exp(-.1*correction/2)
+    //make the second hand wiggle and forth
+    var ms = 100 - (now.getMilliseconds()%1000)
     var dAngle = (ms > 0) ? Math.cos(ms*Math.PI*.045)*ms/1000 :0
-    drawHand(ctx, clockWidth/2, (wiggle+dAngle) * 6);
-    // drawHand(ctx, clockWidth/2, (wiggle) * 6);
+    drawHand(ctx, clockWidth/2, (seconds+dAngle) * 6);
 
+    ctx.save()
+    ctx.lineWidth=40
+    var msPerDay =1000*60*60*24
+    var jan1 = new Date(now.getFullYear(), 0, 1)
+    ctx.beginPath()
+    var start = (now.getTime() - jan1.getTime())/msPerDay
+    console.log(start);
+    var phi1 = start/365.25*2*Math.PI
+    var phi2 = (start +1)/365.25*2*Math.PI
+    console.log(phi1*180/Math.PI);
+    console.log(phi2*180/Math.PI);
+    //show today as a wedge on the outside of the clock
+    ctx.arc(ctx.canvas.width/2, ctx.canvas.height/2, ctx.canvas.width/2+5, phi1-Math.PI/2,  phi2-Math.PI/2)
+    ctx.stroke()
+    console.log("hi");
+    ctx.restore()
+
+
+    ctx.save()
+    ctx.moveTo(ctx.canvas.width/2+x1,ctx.canvas.height/2+y1)
+    var r1 = 150,
+        r2 = 35,
+        x1 = r1 * Math.cos(Math.PI/2-(hours) * 30*Math.PI/180),
+        y1 = -r1 * Math.sin(Math.PI/2-(hours) * 30*Math.PI/180)
+
+    for (dt = 0; dt<96; dt++) {
+      x1 = (r1-r2*dt/24/4) * Math.cos(Math.PI/2-(hours+dt/4) * 30*Math.PI/180)
+      y1 = (r1-r2*dt/24/4) * Math.sin(Math.PI/2-(hours+dt/4) * 30*Math.PI/180)
+
+      // ctx.lineTo(ctx.canvas.width/2+x1,ctx.canvas.height/2+y1)
+      // ctx.beginPath()
+      //circles
+      // ctx.arc(ctx.canvas.width/2+x1, ctx.canvas.height/2-y1, (r1-r2*dt/24/4)*2*Math.PI/96, 0, Math.PI*2)
+      // ctx.fill()
+
+      //spiral - circular gradient showing the next 24 hours
+      ctx.lineWidth = r2/2
+      // console.log("rgba("+Math.floor(dt/97*255)+",0,0,"+(1-dt/97)+")");
+      ctx.strokeStyle="rgba("+Math.floor(dt/97*255)+",0,0,"+(1-dt/97)+")"
+      ctx.beginPath()
+      ctx.arc(ctx.canvas.width/2, ctx.canvas.height/2, (r1-r2*dt/24/4), (30*(hours+dt/4-1/4)-90)*Math.PI/180, (30*(hours+dt/4+1/4)-90)*Math.PI/180)
+      ctx.stroke()
+    }
+    // ctx.stroke()
+    ctx.restore()
     //draw icons
     spec.layout(canvas);
 	}

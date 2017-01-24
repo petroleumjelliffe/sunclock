@@ -239,6 +239,9 @@ var CelestialGlobe= function(spec, onComplete) {
     ctx.restore();
   }
 
+  that.customArc = function(func) {
+    func(spec.sunArc)
+  }
 
 
   //VIEW Functions
