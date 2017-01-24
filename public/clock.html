@@ -23,6 +23,11 @@
     cSpiral.height=500
     var ctxSpiral = cSpiral.getContext("2d")
 
+    var cHour = document.createElement("canvas")
+    cHour.width=500
+    cHour.height=500
+    var ctxHour = cHour.getContext("2d")
+
     var drawDot = function(ctx, d, theta, phi) {
       var r = d * Math.sin(theta)
       ctx.save()
@@ -55,7 +60,25 @@
       }
     }
 
+    var drawHour = function(d1, i)  {
+      if (i>0) {
+        var theta = 2*Math.PI/12
+        var r1 = d1 * Math.sin(theta/2)
+        var d2 = d1 * (1+Math.sin(theta/2))/(1-Math.sin(theta/2))
+        var d3 = d2 * (1+Math.sin(theta/2))/(1-Math.sin(theta/2))
+
+        ctxHour.fillStyle = (i == 1) ? "#333" : "#ccc"
+        drawDot(ctxHour, d1, theta/2, -i*theta)
+
+        ctxHour.fillStyle= "#ccc"
+        drawDot(ctxHour, d3, theta/2, -i*theta)
+        drawDot(ctxHour, d2, theta/2, -i*theta)
+
+        drawHour(d1-1.8, i-1)
+      }
+    }
     draw(200,60)
+    drawHour(50,12)
 
     //mask the ring
     ctxSpiral.beginPath()
@@ -64,6 +87,14 @@
     ctxSpiral.translate(cSpiral.width/2, cSpiral.height/2)
     ctxSpiral.arc(0,0,190,0, 2*Math.PI)
     ctxSpiral.stroke()
+
+
+    ctxHour.beginPath()
+    ctxHour.globalCompositeOperation = "destination-in"
+    ctxHour.lineWidth = 100*Math.sin(Math.PI/12)*2
+    ctxHour.translate(cHour.width/2, cHour.height/2)
+    ctxHour.arc(0,0,40,0, 2*Math.PI)
+    ctxHour.stroke()
 
     // ctx2.translate(ctx2.canvas.width/2, ctx2.canvas.height/2)
     // ctx2.rotate(Math.PI/30*40)
@@ -75,19 +106,26 @@
       ctx2.clearRect(0,0,500,500)
       ctx2.save()
       ctx2.translate(ctx2.canvas.width/2, ctx2.canvas.height/2)
-      ctx2.rotate(Math.floor(now.getSeconds())*Math.PI/30)
+      ctx2.rotate(Math.floor(now.getSeconds()+2)*Math.PI/30)
       ctx2.translate(-ctx2.canvas.width/2, -ctx2.canvas.height/2)
       ctx2.drawImage(cSpiral,0,0)
       ctx2.restore()
 
-      // ctx2.clearRect(0,0,500,500)
       ctx2.save()
       ctx2.translate(ctx2.canvas.width/2, ctx2.canvas.height/2)
-      ctx2.rotate(Math.floor(now.getMinutes())*Math.PI/30)
+      ctx2.rotate(Math.floor(now.getMinutes()+2)*Math.PI/30)
       ctx2.translate(-ctx2.canvas.width/2, -ctx2.canvas.height/2)
-      ctx2.drawImage(cSpiral,0,0,500,500,100,100,300,300)
+      ctx2.drawImage(cSpiral,0,0, 500,500,100,100,300,300)
       ctx2.restore()
 
+      ctx2.save()
+      ctx2.translate(ctx2.canvas.width/2, ctx2.canvas.height/2)
+      ctx2.rotate(Math.floor(now.getHours()%12+2)*Math.PI/6)
+      ctx2.translate(-ctx2.canvas.width/2, -ctx2.canvas.height/2)
+      ctx2.drawImage(cHour,0,0,500,500,50,50,400,400)
+      ctx2.restore()
+
+      console.log(now.getHours()%12);
 
 
       window.requestAnimationFrame(drawSpiral)
