@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+.bar {
+  fill: steelblue;
+}
+
+.bar:hover {
+  fill: brown;
+}
+
+.axis--x path {
+  display: none;
+}
+
+</style>
+<svg width="960" height="500"></svg>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script>
+
+var svg = d3.select("svg"),
+    margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = +svg.attr("width") - margin.left - margin.right,
+    height = +svg.attr("height") - margin.top - margin.bottom;
+
+var x = d3.scaleTime().range([0, width]),
+    y = d3.scaleLinear().rangeRound([0, height]);
+
+var g = svg.append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+// d3.json("books.json", function(error, data) {
+d3.tsv("books.tsv", function(error, data) {
+  if (error) throw error;
+
+  data.map(function(d) {
+    d.start = new Date(d.start)
+    d.end = new Date(d.end)
+    d.duration = (d.end.getTime() - d.start.getTime())/1000/60/60/24
+    d.pagesPerDay = d.pages/d.duration
+  })
+
+  x.domain([d3.min(data, function(d) { return d.start }), d3.max(data, function(d) { return d.end })] );
+  y.domain([d3.max(data, function(d) { return d.pagesPerDay }), 0]);
+
+  g.append("g")
+      .attr("class", "axis axis--x")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+
+  g.append("g")
+      .attr("class", "axis axis--y")
+      .call(d3.axisLeft(y).ticks(10))
+    .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", "0.71em")
+      .attr("text-anchor", "end")
+      .text("Frequency");
+
+  g.selectAll(".bar")
+    .data(data)
+    .enter().append("rect")
+      // .attr("class", "bar")
+      .attr("fill", function(d) {return d.genre == "sci-fi/fantasy" ? "green": "purple"})
+      .attr("x", function(d) { return x(d.start); })
+      .attr("y", function(d) { return y(d.pagesPerDay); })
+      .attr("width", function(d) {return x(d.end)-x(d.start)})
+      .attr("height", function(d) { return height - y(d.pagesPerDay); });
+});
+
+</script>
