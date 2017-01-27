@@ -3,11 +3,11 @@
 <style>
 
 .bar {
-  fill: steelblue;
+  /*fill: steelblue;*/
 }
 
 .bar:hover {
-  fill: brown;
+  /*fill: brown;*/
 }
 
 .axis--x path {
@@ -25,7 +25,8 @@ var svg = d3.select("svg"),
     height = +svg.attr("height") - margin.top - margin.bottom;
 
 var x = d3.scaleTime().range([0, width]),
-    y = d3.scaleLinear().rangeRound([0, height]);
+    y = d3.scaleLinear().rangeRound([0, height]),
+    genre = d3.scaleOrdinal()
 
 var g = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
@@ -33,6 +34,13 @@ var g = svg.append("g")
 // d3.json("books.json", function(error, data) {
 d3.tsv("books.tsv", function(error, data) {
   if (error) throw error;
+
+  genre.domain(data.map(function(d) {
+    return d.genre
+  }).sort())
+    .range([0,255])
+
+  // console.log(genre("sci-fi/fantasy"));
 
   data.map(function(d) {
     d.start = new Date(d.start)
@@ -63,8 +71,8 @@ d3.tsv("books.tsv", function(error, data) {
   g.selectAll(".bar")
     .data(data)
     .enter().append("rect")
-      // .attr("class", "bar")
-      .attr("fill", function(d) {return d.genre == "sci-fi/fantasy" ? "green": "purple"})
+      .attr("class", function(d) { return d.genre})
+      .attr("fill", function(d) {return d3.schemeCategory10[(genre(d.genre))] })
       .attr("x", function(d) { return x(d.start); })
       .attr("y", function(d) { return y(d.pagesPerDay); })
       .attr("width", function(d) {return x(d.end)-x(d.start)})
