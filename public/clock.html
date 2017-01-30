@@ -68,11 +68,11 @@
         var d3 = d2 * (1+Math.sin(theta/2))/(1-Math.sin(theta/2))
 
         ctxHour.fillStyle = (i == 1) ? "#333" : "#ccc"
-        drawDot(ctxHour, d1, theta/2, -i*theta)
+        drawDot(ctxHour, d1, theta/2, (-i-1)*theta)
 
         ctxHour.fillStyle= "#ccc"
-        drawDot(ctxHour, d3, theta/2, -i*theta)
-        drawDot(ctxHour, d2, theta/2, -i*theta)
+        drawDot(ctxHour, d3, theta/2, (-1-i)*theta)
+        drawDot(ctxHour, d2, theta/2, (-1-i)*theta)
 
         drawHour(d1-1.8, i-1)
       }

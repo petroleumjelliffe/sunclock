@@ -26,10 +26,15 @@ var svg = d3.select("svg"),
 
 var x = d3.scaleTime().range([0, width]),
     y = d3.scaleLinear().rangeRound([0, height]),
-    genre = d3.scaleOrdinal()
+    genre = d3.scaleOrdinal(d3.schemeCategory10)
 
 var g = svg.append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+var mouseover = function(d) {
+  //d is node
+  console.log(d.title);
+}
 
 // d3.json("books.json", function(error, data) {
 d3.tsv("books.tsv", function(error, data) {
@@ -38,7 +43,6 @@ d3.tsv("books.tsv", function(error, data) {
   genre.domain(data.map(function(d) {
     return d.genre
   }).sort())
-    .range([0,255])
 
   // console.log(genre("sci-fi/fantasy"));
 
@@ -72,11 +76,31 @@ d3.tsv("books.tsv", function(error, data) {
     .data(data)
     .enter().append("rect")
       .attr("class", function(d) { return d.genre})
-      .attr("fill", function(d) {return d3.schemeCategory10[(genre(d.genre))] })
+      .attr("fill", function(d) {return genre(d.genre)})
       .attr("x", function(d) { return x(d.start); })
       .attr("y", function(d) { return y(d.pagesPerDay); })
       .attr("width", function(d) {return x(d.end)-x(d.start)})
-      .attr("height", function(d) { return height - y(d.pagesPerDay); });
+      .attr("height", function(d) { return height - y(d.pagesPerDay); })
+      .on("mouseover",mouseover)
+
+
 });
+
+g.selectAll(".bar")
+.enter().append("circle")
+  .attr("class", function(d) { return d.genre})
+  .attr("fill", function(d) {return genre(d.genre)})
+  .attr("cx", function(d) { return x(d.end); })
+  .attr("cy", function(d) { return y(d.pagesPerDay); })
+  // .attr("width", function(d) {return x(d.end)-x(d.start)})
+  .attr("r", function(d) { return d.pages/50; })
+  .on("mouseover",mouseover)
+
+d3.selectAll("rect")
+    .transition()
+    .duration(1000)
+    .attr("rx",0)
+    .attr("ry",0);
+
 
 </script>
