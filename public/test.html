@@ -1,0 +1,135 @@
+<html>
+<head>
+  <script   src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <svg width="960" height="500"></svg>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+
+  <script>
+
+    var globe = function(spec) {
+
+      spec = spec || {}
+      spec.lat = spec.lat||40.6816778, //NYC
+      spec.lon = spec.lon||-73.9962808, //NYC
+      // spec.timestamp = spec.timestamp||new Date();
+
+      spec.sun = {}
+
+      var that = {}
+
+      var getArcs = function(date, callback) {
+        console.log("getArcs");
+        $.getJSON("sunmoon/day", {
+          lat: spec.lat,
+          lon: spec.lon,
+          timestamp: date},
+          function(data) {
+            // spec.moon[date] = data.map(function(item) {
+            //   return item.moon
+            // })
+            spec.sun[date] = data.map(function(item){
+              return item.sun
+            })
+            console.log(spec.sun[date]);
+            console.log("updated arcs");
+
+            //cosure for after the data is processed
+            callback();
+        })
+      }
+
+      that.drawArc = function(date, callback) {
+        //does arc[date] exist?
+        if (spec.sun[date]  === undefined) {
+          console.log(date+" is new");
+          getArcs(date, function() {
+            callback(spec.sun[date])
+            console.log("after drawArc callback");
+          })
+        } else {
+          console.log(date+" already exists drawArc");
+
+          callback(spec.sun[date])
+
+        }
+      }
+
+      that.log = function() {
+        console.log(spec.sun);
+        console.log(now.toISOString());
+        console.log(spec.sun[now.toISOString()]);
+        return Object.keys(spec.sun)
+      }
+
+      return that;
+    }
+
+    var newObj = new globe({})
+    //load arcs for today, or given day
+
+    var date = new Date()
+    date.setHours(0,0,0,0)
+    console.log(date);
+
+
+    var svg = d3.select("svg"),
+        margin = {top: 20, right: 20, bottom: 30, left: 50},
+        width = +svg.attr("width") - margin.left - margin.right,
+        height = +svg.attr("height") - margin.top - margin.bottom,
+        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var dAz = 0
+    // var width =500,
+    //     height = 300
+
+    var x = d3.scaleLinear()
+          .domain([-Math.PI/2, Math.PI/2])
+          .range([0, width]),
+        y = d3.scaleLinear()
+          .domain([-1, 1])
+          .range([height, 0])
+
+    var line = d3.line()
+      .x(function(d) { return x(d.azimuth) })
+      .y(function(d) { return y(Math.sin(d.altitude)) })
+
+
+    newObj.drawArc(date, function(arc) {
+      console.log("inside drawarc callback");
+
+      g.append("path")
+      .datum(arc)
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-linejoin", "round")
+      .attr("stroke-linecap", "round")
+      .attr("stroke-width", 1.5)
+      .attr("d", line);
+      // console.log(line(arc))
+
+    })
+
+
+
+
+
+    // testObj.runCallback(yesterday, function() {  })
+    // testObj.runCallback(today, function() {  })
+    // testObj.runCallback(tomorrow, function() {  })
+
+    // yesterday.setHours(24)
+    // today.setHours(24)
+    // tomorrow.setHours(24)
+    //
+
+
+  </script>
+
+
+</body>
+
+
+</html>
