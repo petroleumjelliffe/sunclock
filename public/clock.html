@@ -5,13 +5,120 @@
   <script   src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
   <script   src="./js/analog-clock.js"   crossorigin="anonymous"></script>
 
+
+  <style>
+
+  body {
+  background: #fcfcfa;
+  }
+
+  .stroke {
+  fill: none;
+  stroke: #000;
+  stroke-width: 3px;
+  }
+
+  .fill {
+    fill:#fff
+
+  }
+
+  .graticule {
+  fill: none;
+  stroke: #777;
+  stroke-width: .5px;
+  stroke-opacity: .5;
+  }
+
+  .land {
+  fill: #222;
+  }
+
+  .boundary {
+  fill: none;
+  stroke: #fff;
+  stroke-width: .5px;
+  }
+
+  </style>
 </head>
 
 <body>
   <canvas id="spiral" width="500" height="500"></canvas>
 
+  <script src="//d3js.org/d3.v3.min.js"></script>
+  <script src="//d3js.org/topojson.v1.min.js"></script>
+  <script>
 
-  <p>Hello, world!</p>
+  var width = 960,
+      height = 960;
+
+  var psi = Math.PI/2;
+
+  var projection = d3.geo.orthographic()
+      .scale(100)
+      .translate([width / 2, height / 2])
+      .rotate([0,23.4*Math.sin(psi),23.4*Math.cos(psi)])
+      .clipAngle(90)
+      .precision(.1);
+
+  var path = d3.geo.path()
+      .projection(projection);
+
+  var graticule = d3.geo.graticule();
+
+  var svg = d3.select("body").append("svg")
+      .attr("width", width)
+      .attr("height", height);
+
+
+
+
+
+  svg.append("defs").append("path")
+      .datum({type: "Sphere"})
+      .attr("id", "sphere")
+      .attr("d", path);
+
+      var grad = svg.append("defs")
+        .append("linearGradient")
+        .attr("id", "grad")
+      grad.append("stop").attr("offset", "0%").style("stop-color", "white");
+      grad.append("stop").attr("offset", "50%").style("stop-color", "blue");
+      grad.append("stop").attr("offset", "100%").style("stop-color", "blue");
+
+
+  svg.append("use")
+      .attr("class", "stroke")
+      .attr("xlink:href", "#sphere");
+
+  svg.append("use")
+      .attr("class", "#grad")
+      .attr("xlink:href", "#sphere");
+
+  var abc = svg.append("path")
+      .datum(graticule)
+      .attr("class", "graticule")
+      .attr("d", path);
+
+  d3.json("./js/world-50m.json", function(error, world) {
+    if (error) throw error;
+
+    svg.insert("path", ".graticule")
+        .datum(topojson.feature(world, world.objects.land))
+        .attr("class", "land")
+        .attr("d", path);
+
+    svg.insert("path", ".graticule")
+        .datum(topojson.mesh(world, world.objects.countries, function(a, b) { return a !== b; }))
+        .attr("class", "boundary")
+        .attr("d", path);
+  });
+
+  d3.select(self.frameElement).style("height", height + "px");
+
+  </script>
+
 
   <script>
 
@@ -127,6 +234,15 @@
 
       console.log(now.getHours()%12);
 
+      psi+= Math.PI/12/60
+
+      projection.rotate([psi*180/Math.PI*365.25,23.4*Math.sin(psi),23.4*Math.cos(psi)])
+
+      path.projection(projection)
+
+      abc.attr("d", path);
+
+      console.log(psi);
 
       window.requestAnimationFrame(drawSpiral)
     }
@@ -140,6 +256,7 @@
 
 
     </script>
+
 
 </body>
 

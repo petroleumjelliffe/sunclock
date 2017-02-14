@@ -1,0 +1,133 @@
+<html>
+<head>
+
+
+  <script   src="https://code.jquery.com/jquery-2.2.3.min.js"   integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo="   crossorigin="anonymous"></script>
+  <script   src="./js/analog-clock.js"   crossorigin="anonymous"></script>
+
+
+  <style>
+
+  body {
+  background: #fcfcfa;
+  }
+
+  .stroke {
+  fill: none;
+  stroke: #000;
+  stroke-width: 3px;
+  }
+
+  .fill {
+    fill:#fff
+
+  }
+
+  .graticule {
+  fill: none;
+  stroke: #777;
+  stroke-width: .5px;
+  stroke-opacity: .5;
+  }
+
+  .land {
+  fill: #222;
+  }
+
+  .boundary {
+  fill: none;
+  stroke: #fff;
+  stroke-width: .5px;
+  }
+
+  </style>
+</head>
+
+<body>
+
+  <script src="//d3js.org/d3.v4.min.js"></script>
+  <script src="//d3js.org/topojson.v1.min.js"></script>
+  <script>
+
+    var width = 300,
+        height = 300;
+
+    var svg = d3.select("body").append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    var theta = d3.scaleTime()
+      .domain([new Date(2016,11,23,5,44), new Date(2017,11,23,11,28)])
+      .range([90, -270])
+
+    var season = d3.scaleTime()
+      .domain([new Date(2016,11,23,5,44),
+        new Date(2017,02,20,6,28),
+        new Date(2017,05,21,0,24),
+        new Date(2017,08,22,16,02),
+        new Date(2017,11,23,12,28)])
+      .range(["fall","winter", "spring", "summer", "fall", "winter"])
+
+    // var test = d3.scaleLinear()
+    //   .domain([0, 2*Math.PI])
+    //   .range([-1, 1])
+    //   .interpolate(function(d) {return Math.cos(d)})
+    //
+    // console.log(test(Math.PI/3));
+
+    var offset = theta(new Date(2017,0,1))
+
+    var markers = theta.ticks(365)
+      // .map(function(item) {
+      //   return {
+      //     "date":item,
+      //     "angle":theta(item)
+      //   }
+      // })
+
+    var line = d3.line()
+      .x(function(d) { return width/2 *(1+ Math.cos(theta(d)*Math.PI/180)) })
+      .y(function(d) { return height/2 * (1 - Math.sin(theta(d)*Math.PI/180)) })
+
+    console.log(markers);
+    svg.append("g")
+      .selectAll("circle")
+      .data(markers)
+      .enter()
+      .append("circle")
+      // .attr("cx", function (d) { return Math.cos(d.angle*Math.PI/180) * 175 +320  })
+      // .attr("cy", function (d) { return 320- Math.sin(d.angle*Math.PI/180) *175 })
+      .attr("cx", line.x())
+      .attr("cy", line.y())
+
+      .attr("r",1)
+      .attr("fill",function(d) {return (d.getMonth()%2) ? "#ccc" : "#333"})
+      .attr("class",function (d) { return season(d)})
+
+      // .attr("height", 20)
+
+    var today = svg.append("g")
+      .selectAll("circle")
+      .data([new Date()])
+      .enter()
+      .append("circle")
+      // .attr("cx", function (d) { return Math.cos(theta(d)*Math.PI/180) * 188 +320  })
+      // .attr("cy", function (d) { return 320- Math.sin(theta(d)*Math.PI/180) *188 })
+      .attr("cx", line.x())
+      .attr("cy", line.y())
+      .attr("r",10)
+      .attr("fill","#0077be")
+      .attr("class",function (d) { return season(d.date)})
+
+
+
+
+    </script>
+
+
+</body>
+
+
+
+
+</html>
