@@ -124,88 +124,68 @@
         // return y(Math.sin(d.altitude))
       })
 
-      //draw x axis
-      g.append("g")
-           .attr("transform", "translate(0," + height + ")")
-           .call(d3.axisBottom(x))
+    //draw x axis
+    g.append("g")
+         .attr("transform", "translate(0," + height + ")")
+         .call(d3.axisBottom(x))
 
 
-      //draw y axis
-       g.append("g")
-           .call(d3.axisLeft(y))
-         .append("text")
-           .attr("fill", "#000")
-           .attr("transform", "rotate(-90)")
-           .attr("y", 6)
-           .attr("dy", "0.71em")
-           .attr("text-anchor", "end")
-           .text("Price ($)");
+    //draw y axis
+    g.append("g")
+      .call(d3.axisLeft(y))
+      .append("text")
+      .attr("fill", "#000")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 6)
+      .attr("dy", "0.71em")
+      .attr("text-anchor", "end")
+      .text("Altitude");
+
+    var format = d3.timeFormat("%Y-%m-%d")
+
+    var array = []
+    var drawline = function(arc) {
+      console.log("drawline called");
+      console.log(arc);
+
+      var dAz = Math.PI - arc[0].azimuth
+
+      var corrected = arc.map(function(item) {
+        item.azimuth = (item.azimuth  +dAz+ Math.PI )%(2*Math.PI)-Math.PI-dAz
+        return item
+      })
+
+      array = array.concat(corrected)
+
+      var group = svg.selectAll("path.test")
+        .data(groupedArcs, function(d) {return d.key})
+        .enter().append("path")
+        .attr("d", function(d){console.log(d); return line(d.values)})
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-linejoin", "round")
+        .attr("stroke-linecap", "round")
+        .attr("stroke-width", 1.5)
+    }
+
+    // var groupedArcs = d3.nest()
+    //   .key(function(d) {return format(new Date(d.date))})
+    //   .entries(array)
 
 
-
-      var svg = d3.select("svg")
-
-
-      // var group = svg.selectAll("path.test")
-      //   .data(data, function(d) {return d.key})
-      //   .enter().append("path")
-      //   .attr("d", function(d){console.log(d); return line(d.values)})
-      //   .attr("fill", "none")
-      //   .attr("stroke", "steelblue")
-      //   .attr("stroke-linejoin", "round")
-      //   .attr("stroke-linecap", "round")
-      //   .attr("stroke-width", 1.5)
-
-      var format = d3.timeFormat("%Y-%m-%d")
-      var drawline = function(arc) {
-        console.log("drawline called");
-        console.log(arc);
-        var groupedArcs = d3.nest()
-          .key(function(d) {return format(new Date(d.date))})
-          .entries(arc)
-
-        console.log(groupedArcs);
-        var group = svg.selectAll("path.test")
-          .data(groupedArcs, function(d) {return d.key})
-          .enter().append("path")
-          .attr("d", function(d){console.log(d); return line(d.values)})
-          .attr("fill", "none")
-          .attr("stroke", "steelblue")
-          .attr("stroke-linejoin", "round")
-          .attr("stroke-linecap", "round")
-          .attr("stroke-width", 1.5)
-      }
-
-    //  var drawline = function(arc) {
-    //    console.log(arc);
-    //
-    //    var dAz = Math.PI - arc[0].azimuth
-    //
-    //    var corrected = arc.map(function(item) {
-    //      item.azimuth = (item.azimuth  +dAz+ Math.PI )%(2*Math.PI)-Math.PI-dAz
-    //      return item
-    //    })
-    //    console.log("inside drawarc callback");
-    //    console.log(Math.PI - arc[0].azimuth);
-    //
-    //   return (g.append("path")
-    //      .attr("class", "abc")
-    //      .datum(arc)
-    //      .attr("d", function(d) { line(d.values) })
-    //      .attr("fill", "none")
-    //      .attr("stroke", "steelblue")
-    //      .attr("stroke-linejoin", "round")
-    //      .attr("stroke-linecap", "round")
-    //      .attr("stroke-width", 1.5)
-    //    )
-    // }
     //draw sunarc for today
-    newObj.sunArc(date, drawline)
+    // newObj.sunArc(date, drawline)
     newObj.moonArc(date, drawline)
 
     date.setHours(24)
-    newObj.sunArc(date, drawline)
+    // newObj.sunArc(date, drawline)
     newObj.moonArc(date, drawline)
+
+    date.setHours(24)
+    // newObj.sunArc(date, drawline)
+    newObj.moonArc(date, drawline)
+
+    // console.log(groupedArcs);
 
     // now = time
     // time += 15 minutes
