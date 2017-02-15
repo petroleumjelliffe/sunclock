@@ -64,10 +64,12 @@
             getArcs(date, function() {
               return callback(thing[date])
               console.log("after drawArc callback");
+              console.log(thing);
+
             })
           } else {
             console.log(date+" already exists drawArc");
-
+            console.log(thing);
             return callback(thing[date])
 
           }
@@ -122,179 +124,88 @@
         // return y(Math.sin(d.altitude))
       })
 
-      // //draw x axis
-      // g.append("g")
-      //      .attr("transform", "translate(0," + height + ")")
-      //      .call(d3.axisBottom(x))
-      //
-      //
-      // //draw y axis
-      //  g.append("g")
-      //      .call(d3.axisLeft(y))
-      //    .append("text")
-      //      .attr("fill", "#000")
-      //      .attr("transform", "rotate(-90)")
-      //      .attr("y", 6)
-      //      .attr("dy", "0.71em")
-      //      .attr("text-anchor", "end")
-      //      .text("Price ($)");
+      //draw x axis
+      g.append("g")
+           .attr("transform", "translate(0," + height + ")")
+           .call(d3.axisBottom(x))
 
 
-      var data = [{
-        key:"2017-02-11",
-        values: [{
-          x:1, y:1
-        }, {
-          x:2, y:2
-        }]
-      }, {
-        key:"2017-02-12",
-        values: [{
-          x:1, y:1
-        }, {
-          x:2, y:2
-        }]
-      }, {
-        key:"2017-02-13",
-        values: [{
-          x:1, y:1
-        }, {
-          x:2, y:2
-        }]
-      }]
+      //draw y axis
+       g.append("g")
+           .call(d3.axisLeft(y))
+         .append("text")
+           .attr("fill", "#000")
+           .attr("transform", "rotate(-90)")
+           .attr("y", 6)
+           .attr("dy", "0.71em")
+           .attr("text-anchor", "end")
+           .text("Price ($)");
 
-      var line2 = d3.line()
-        .x(function(d) {
-          console.log(d.x);
-          return x(d.x)
-        })
-        .y(function(d) {
-          console.log(d.y);
-          return y(d.y)
-        })
+
+
       var svg = d3.select("svg")
 
-      var group = svg.selectAll("path.test")
-        .data(data, function(d) {return d.key})
-        .enter().append("path")
-        .attr("d", function(d){console.log(d); return line2(d.values)})
 
-      // var paths = group.selectAll("path")
-      //   .data(function(d,i) {console.log(d.key);return d})
+      // var group = svg.selectAll("path.test")
+      //   .data(data, function(d) {return d.key})
       //   .enter().append("path")
+      //   .attr("d", function(d){console.log(d); return line(d.values)})
+      //   .attr("fill", "none")
+      //   .attr("stroke", "steelblue")
+      //   .attr("stroke-linejoin", "round")
+      //   .attr("stroke-linecap", "round")
+      //   .attr("stroke-width", 1.5)
 
-    //  var graph = x.selectAll("path")
-    //   .enter().append("path")
-    //   .data(function(d) {return d.values})
-    //   .attr("class", "test")
-    //     .attr("d", line)
+      var format = d3.timeFormat("%Y-%m-%d")
+      var drawline = function(arc) {
+        console.log("drawline called");
+        console.log(arc);
+        var groupedArcs = d3.nest()
+          .key(function(d) {return format(new Date(d.date))})
+          .entries(arc)
 
-    // var paths2 = svg.selectAll("path").append("path")
-    //   .data(function(d) {console.log(d); return d})
-      // .enter().append("path")
-      // .attr("d",line)
+        console.log(groupedArcs);
+        var group = svg.selectAll("path.test")
+          .data(groupedArcs, function(d) {return d.key})
+          .enter().append("path")
+          .attr("d", function(d){console.log(d); return line(d.values)})
+          .attr("fill", "none")
+          .attr("stroke", "steelblue")
+          .attr("stroke-linejoin", "round")
+          .attr("stroke-linecap", "round")
+          .attr("stroke-width", 1.5)
+      }
 
-      // .selectAll("circle") //no paths yet
-      //
-      //  .enter().append("circle")
-      //  .data(function(d)  {
-      //    console.log(d);
-      //    return d
-      //  })
-      //  .attr("cx",function(d) {console.log(d); d[0]} )
-      //  .attr("cy",function(d) {d[1]} )
-      //  .attr("r",3)
-      //  .exit().remove()
-
-       //function to return an array per parent item
-      //  <g> //d3.select("g")
-      //    <g transform offset>//d3.select("g").selectAll("g")  //parentNode is g
-      //      <path "sun 2017-02-11" transform -width></path>
-      //      <path "sun 2017-02-12"></path>
-      //      <path "sun 2017-02-13" transform +width></path>
-      //    </g>
-      //    <g>
-      //      <path "moon 2017-02-11"></path>
-      //      <path "moon 2017-02-12"></path>
-      //      <path "moon 2017-02-13"></path>
-      //   </g>
-      // </g>
-
-
-
-      //  .data([ //function to return an array per parent item
-       //
-      //    {
-      //      key:"2017-2-11",
-      //      values: [{
-      //        date: new Date(2017,1,11,0,0,0),
-      //        azimuth: -Math.PI/2,
-      //        altitude: Math.PI/6
-      //      }, {
-      //        date: new Date(2017,1,11,12,0,0),
-      //        azimuth: Math.PI/2,
-      //        altitude: Math.PI/6
-      //      }]
-      //    }, {
-      //      key:"2017-02-12",
-      //      values: [
-      //      {
-      //        date: new Date(2017,1,12,0,0,0),
-      //        azimuth: -Math.PI/2,
-      //        altitude: Math.PI/8
-      //      },  {
-      //        date: new Date(2017,1,12,12,0,0),
-      //        azimuth: Math.PI/2,
-      //        altitude: Math.PI/8
-      //      }]
-      //    }])
-       .enter()
-       .attr("d", line)
-       .attr("transform", "translate( offset ,0)")
-       .attr("fill", "none")
-       .attr("stroke", "steelblue")
-       .attr("stroke-linejoin", "round")
-       .attr("stroke-linecap", "round")
-       .attr("stroke-width", 1.5)
-      //  .exit().remove()
-
-
-     var drawline = function(arc) {
-       console.log(arc);
-
-       var dAz = Math.PI - arc[0].azimuth
-
-       var corrected = arc.map(function(item) {
-         item.azimuth = (item.azimuth  +dAz+ Math.PI )%(2*Math.PI)-Math.PI-dAz
-         return item
-       })
-       console.log("inside drawarc callback");
-       console.log(Math.PI - arc[0].azimuth);
-
-      return (g.append("path")
-         .attr("class", "abc")
-         .datum(arc)
-         .attr("fill", "none")
-         .attr("stroke", "steelblue")
-         .attr("stroke-linejoin", "round")
-         .attr("stroke-linecap", "round")
-         .attr("stroke-width", 1.5)
-         .attr("d", line))
-    }
-    // //draw sunarc for today
-    // newObj.sunArc(date, drawline)
-    // var b = []
-    // newObj.moonArc(date, function(arc) {
-    //   b.push(drawline(arc))
-    // })
-    // // b.attr("transform", "translate(" +0+",0)")
+    //  var drawline = function(arc) {
+    //    console.log(arc);
     //
-    // date.setHours(24)
-    // newObj.moonArc(date, function(arc) {
-    //   var newline = drawline(arc)
-    //   newline.attr("transform", "translate("+x(Math.PI)+",0)")
-    //   b.push(newline)
-    // })
+    //    var dAz = Math.PI - arc[0].azimuth
+    //
+    //    var corrected = arc.map(function(item) {
+    //      item.azimuth = (item.azimuth  +dAz+ Math.PI )%(2*Math.PI)-Math.PI-dAz
+    //      return item
+    //    })
+    //    console.log("inside drawarc callback");
+    //    console.log(Math.PI - arc[0].azimuth);
+    //
+    //   return (g.append("path")
+    //      .attr("class", "abc")
+    //      .datum(arc)
+    //      .attr("d", function(d) { line(d.values) })
+    //      .attr("fill", "none")
+    //      .attr("stroke", "steelblue")
+    //      .attr("stroke-linejoin", "round")
+    //      .attr("stroke-linecap", "round")
+    //      .attr("stroke-width", 1.5)
+    //    )
+    // }
+    //draw sunarc for today
+    newObj.sunArc(date, drawline)
+    newObj.moonArc(date, drawline)
+
+    date.setHours(24)
+    newObj.sunArc(date, drawline)
+    newObj.moonArc(date, drawline)
 
     // now = time
     // time += 15 minutes
